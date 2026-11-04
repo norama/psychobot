@@ -1,0 +1,27 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #182e2a;
+  background: #eef4f1;
+  line-height: 1.55;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #235b4d; text-underline-offset: 0.2em; }
+.layout { width: min(100% - 2rem, 42rem); margin: 2rem auto; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.brand { font-weight: 750; text-decoration: none; }
+.panel { padding: clamp(1.25rem, 5vw, 2.5rem); background: white; border: 1px solid #ccdcd5; border-radius: 1rem; }
+.eyebrow { margin: 0; color: #3d6358; font-size: 0.875rem; font-weight: 650; }
+h1 { margin: 0.45rem 0; font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.2; }
+button { padding: 0.6rem 1rem; border: 1px solid #235b4d; border-radius: 0.5rem; color: white; background: #235b4d; font: inherit; cursor: pointer; }
+button.secondary { color: #235b4d; background: white; }
+button:disabled { opacity: 0.65; cursor: wait; }
+:focus-visible { outline: 3px solid #3775a8; outline-offset: 3px; }
+.connection { border: 1px solid #ccdcd5; border-radius: 0.75rem; padding: 1rem; margin: 1rem 0 0; }
+dl { margin: 0; }
+dl div + div { margin-top: 0.6rem; }
+dt { color: #3d6358; font-size: 0.875rem; }
+dd { margin: 0; font-weight: 650; }
+.connection a { display: inline-block; margin-top: 1rem; }
+[role="alert"] { color: #8b2828; }
