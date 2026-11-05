@@ -20,18 +20,25 @@ type Workspace = {
 }
 
 type WorkspacesState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'ready'; rows: Workspace[] }
+  { status: 'loading' } | { status: 'error' } | { status: 'ready'; rows: Workspace[] }
 
 const workspaceId = new URLSearchParams(window.location.search).get('workspace')
 const validWorkspaceId = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
 const authResponse = new URL(window.location.href)
-const callbackError = authResponse.searchParams.has('error')
-  || new URLSearchParams(authResponse.hash.slice(1)).has('error')
+const callbackError =
+  authResponse.searchParams.has('error') ||
+  new URLSearchParams(authResponse.hash.slice(1)).has('error')
 const callbackCode = authResponse.searchParams.has('code')
 
-function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: string; themes: ReturnType<typeof useThemeCatalog> }) {
+function WorkspaceList({
+  db,
+  userId,
+  themes,
+}: {
+  db: SupabaseClient
+  userId: string
+  themes: ReturnType<typeof useThemeCatalog>
+}) {
   const [state, setState] = useState<WorkspacesState>({ status: 'loading' })
 
   useEffect(() => {
@@ -41,8 +48,7 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
     }
 
     const controller = new AbortController()
-    const query = db.from('workspaces')
-      .select(`
+    const query = db.from('workspaces').select(`
         id, therapist_id, client_id,
         therapist:profiles!workspaces_therapist_id_fkey(display_name),
         client:profiles!workspaces_client_id_fkey(display_name)
@@ -59,7 +65,9 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
         // to-many one — it defaults to typing both as arrays. PostgREST
         // still returns a single object per row here, so the cast reflects
         // actual runtime shape rather than the generic inferred type.
-        setState(error ? { status: 'error' } : { status: 'ready', rows: data as unknown as Workspace[] })
+        setState(
+          error ? { status: 'error' } : { status: 'ready', rows: data as unknown as Workspace[] },
+        )
       } catch {
         if (!controller.signal.aborted) setState({ status: 'error' })
       }
@@ -69,18 +77,19 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
     return () => controller.abort()
   }, [db])
 
-  const singleWorkspace = state.status === 'ready' && workspaceId !== null && state.rows.length === 1
-    ? state.rows[0]
-    : null
+  const singleWorkspace =
+    state.status === 'ready' && workspaceId !== null && state.rows.length === 1
+      ? state.rows[0]
+      : null
   const role: ThemeRole = singleWorkspace?.therapist_id === userId ? 'therapist' : 'client'
   const { themeId, choose } = useWorkspaceTheme(db, themes, userId, singleWorkspace?.id ?? '', role)
   // No valid single workspace to open (loading, missing, or inaccessible):
   // fall back to the same theme as the rest of the signed-in app.
   useFixedTheme(themes, workspaceId !== null && !singleWorkspace ? 'signed_in' : null)
 
-  if (state.status === 'loading') return <p role="status">Načítám pracovní prostor…</p>
+  if (state.status === 'loading') return <p role='status'>Načítám pracovní prostor…</p>
   if (state.status === 'error') {
-    return <p role="alert">Pracovní prostor se nepodařilo načíst. Zkuste obnovit stránku.</p>
+    return <p role='alert'>Pracovní prostor se nepodařilo načíst. Zkuste obnovit stránku.</p>
   }
   if (workspaceId === null) {
     const asTherapist = state.rows.filter((workspace) => workspace.therapist_id === userId)
@@ -89,14 +98,13 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
       <>
         <h1>Přehled propojení</h1>
         <ConnectionSection
-          title="Moji klienti"
-          emptyText="Zatím žádní klienti."
-          actions={(
-            <Button variant="secondary" disabled title="Pozvánky budou dostupné v další verzi.">
+          title='Moji klienti'
+          emptyText='Zatím žádní klienti.'
+          actions={
+            <Button variant='secondary' disabled title='Pozvánky budou dostupné v další verzi.'>
               Pozvat klienta
             </Button>
-          )}
-        >
+          }>
           {asTherapist.map((workspace) => (
             <ConnectionCard
               key={workspace.id}
@@ -105,7 +113,7 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
             />
           ))}
         </ConnectionSection>
-        <ConnectionSection title="Moji terapeuti" emptyText="Zatím žádní terapeuti.">
+        <ConnectionSection title='Moji terapeuti' emptyText='Zatím žádní terapeuti.'>
           {asClient.map((workspace) => (
             <ConnectionCard
               key={workspace.id}
@@ -123,7 +131,9 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
       <>
         <h1>Pracovní prostor není dostupný</h1>
         <p>Tento odkaz není dostupný pro přihlášený účet.</p>
-        <a className="text-brand-700 underline" href="/">Přejít na přehled</a>
+        <a className='text-brand-700 underline' href='/'>
+          Přejít na přehled
+        </a>
       </>
     )
   }
@@ -136,11 +146,13 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
       <ConnectionCard
         roleLabel={isTherapist ? 'Terapeut' : 'Klient'}
         counterpartLabel={isTherapist ? 'Váš klient' : 'Váš terapeut'}
-        counterpartName={(isTherapist ? workspace.client : workspace.therapist)?.display_name ?? '—'}
+        counterpartName={
+          (isTherapist ? workspace.client : workspace.therapist)?.display_name ?? '—'
+        }
       />
       {themes && (
-        <div className="mt-4">
-          <p className="mb-2 text-sm font-semibold text-brand-700">Barevný motiv</p>
+        <div className='mt-4'>
+          <p className='mb-2 text-sm font-semibold text-brand-700'>Barevný motiv</p>
           <ThemeSelector themes={themes} activeThemeId={themeId} onChoose={choose} />
         </div>
       )}
@@ -161,7 +173,9 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
   useFixedTheme(themes, !session ? 'signed_out' : workspaceId === null ? 'signed_in' : null)
 
   useEffect(() => {
-    const { data: { subscription } } = db.auth.onAuthStateChange((event, nextSession) => {
+    const {
+      data: { subscription },
+    } = db.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'INITIAL_SESSION' && !nextSession && (callbackError || callbackCode)) {
         setError('Přihlášení se nepodařilo. Zkuste to znovu.')
         window.history.replaceState(null, '', '/')
@@ -202,11 +216,23 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
     }
   }
 
-  if (session === undefined) return <Layout><p role="status">Ověřuji přihlášení…</p></Layout>
+  if (session === undefined)
+    return (
+      <Layout>
+        <p role='status'>Ověřuji přihlášení…</p>
+      </Layout>
+    )
 
   return (
-    <Layout actions={session && <Button variant="secondary" disabled={busy} onClick={signOut}>Odhlásit se</Button>}>
-      {error && <p role="alert">{error}</p>}
+    <Layout
+      actions={
+        session && (
+          <Button variant='secondary' disabled={busy} onClick={signOut}>
+            Odhlásit se
+          </Button>
+        )
+      }>
+      {error && <p role='alert'>{error}</p>}
       {session ? (
         <WorkspaceList key={session.user.id} db={db} userId={session.user.id} themes={themes} />
       ) : (
@@ -227,9 +253,16 @@ function App() {
   return (
     <Layout>
       <h1>Připojte Supabase</h1>
-      <p>V souboru <code>.env.local</code> nastavte adresu projektu a veřejný klíč podle pokynů v README.</p>
+      <p>
+        V souboru <code>.env.local</code> nastavte adresu projektu a veřejný klíč podle pokynů v
+        README.
+      </p>
     </Layout>
   )
 }
 
-createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)

@@ -12,12 +12,12 @@ export function ThemeSelector({
   const options = themes.filter((theme) => theme.category === 'workspace')
 
   return (
-    <div role="radiogroup" aria-label="Barevný motiv" className="flex gap-3">
+    <div role='radiogroup' aria-label='Barevný motiv' className='flex gap-3'>
       {options.map((theme) => (
         <button
           key={theme.id}
-          type="button"
-          role="radio"
+          type='button'
+          role='radio'
           aria-checked={theme.id === activeThemeId}
           aria-label={theme.id}
           onClick={() => onChoose(theme.id)}
