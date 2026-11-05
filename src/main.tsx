@@ -5,6 +5,8 @@ import { supabase } from './supabase'
 import { useFixedTheme, useThemeCatalog, useWorkspaceTheme } from './theme'
 import type { ThemeRole } from './theme'
 import { Button } from './ui/Button'
+import { ConnectionCard } from './ui/ConnectionCard'
+import { ConnectionSection } from './ui/ConnectionSection'
 import { Layout } from './ui/Layout'
 import { ThemeSelector } from './ui/ThemeSelector'
 import './style.css'
@@ -80,13 +82,44 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
   if (state.status === 'error') {
     return <p role="alert">Pracovní prostor se nepodařilo načíst. Zkuste obnovit stránku.</p>
   }
-  if (state.rows.length === 0) {
-    return workspaceId === null ? (
+  if (workspaceId === null) {
+    const asTherapist = state.rows.filter((workspace) => workspace.therapist_id === userId)
+    const asClient = state.rows.filter((workspace) => workspace.client_id === userId)
+    return (
       <>
-        <h1>Zatím bez propojení</h1>
-        <p>Pro tento účet zatím není vytvořené žádné propojení.</p>
+        <h1>Přehled propojení</h1>
+        <ConnectionSection
+          title="Moji klienti"
+          emptyText="Zatím žádní klienti."
+          actions={(
+            <Button variant="secondary" disabled title="Pozvánky budou dostupné v další verzi.">
+              Pozvat klienta
+            </Button>
+          )}
+        >
+          {asTherapist.map((workspace) => (
+            <ConnectionCard
+              key={workspace.id}
+              counterpartName={workspace.client?.display_name ?? '—'}
+              openHref={`/?workspace=${workspace.id}`}
+            />
+          ))}
+        </ConnectionSection>
+        <ConnectionSection title="Moji terapeuti" emptyText="Zatím žádní terapeuti.">
+          {asClient.map((workspace) => (
+            <ConnectionCard
+              key={workspace.id}
+              counterpartName={workspace.therapist?.display_name ?? '—'}
+              openHref={`/?workspace=${workspace.id}`}
+            />
+          ))}
+        </ConnectionSection>
       </>
-    ) : (
+    )
+  }
+
+  if (state.rows.length === 0) {
+    return (
       <>
         <h1>Pracovní prostor není dostupný</h1>
         <p>Tento odkaz není dostupný pro přihlášený účet.</p>
@@ -95,32 +128,23 @@ function WorkspaceList({ db, userId, themes }: { db: SupabaseClient; userId: str
     )
   }
 
+  const workspace = state.rows[0]
+  const isTherapist = workspace.therapist_id === userId
   return (
     <>
-      <h1>{workspaceId === null ? 'Přehled propojení' : 'Společný pracovní prostor'}</h1>
-      {state.rows.map((workspace) => {
-        const isTherapist = workspace.therapist_id === userId
-        return (
-          <section className="connection" key={workspace.id} aria-label="Propojení">
-            <dl>
-              <div><dt>Vaše role</dt><dd>{isTherapist ? 'Terapeut' : 'Klient'}</dd></div>
-              <div><dt>{isTherapist ? 'Váš klient' : 'Váš terapeut'}</dt><dd>{(isTherapist ? workspace.client : workspace.therapist)?.display_name ?? '—'}</dd></div>
-            </dl>
-            {workspaceId === null && (
-              <a className="mt-4 inline-block text-brand-700 underline" href={`/?workspace=${workspace.id}`}>
-                Otevřít pracovní prostor
-              </a>
-            )}
-          </section>
-        )
-      })}
-      {singleWorkspace && themes && (
+      <h1>Společný pracovní prostor</h1>
+      <ConnectionCard
+        roleLabel={isTherapist ? 'Terapeut' : 'Klient'}
+        counterpartLabel={isTherapist ? 'Váš klient' : 'Váš terapeut'}
+        counterpartName={(isTherapist ? workspace.client : workspace.therapist)?.display_name ?? '—'}
+      />
+      {themes && (
         <div className="mt-4">
           <p className="mb-2 text-sm font-semibold text-brand-700">Barevný motiv</p>
           <ThemeSelector themes={themes} activeThemeId={themeId} onChoose={choose} />
         </div>
       )}
-      {workspaceId !== null && <p>Zprávy přidáme v další verzi.</p>}
+      <p>Zprávy přidáme v další verzi.</p>
     </>
   )
 }
