@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import type { Theme } from '../theme'
+import type { Theme } from '@/theme'
 
 export function ThemeSelector({
   themes,

@@ -9,6 +9,7 @@
     "checking": "Ověřuji přihlášení…",
     "signedOutTitle": "Mezi sezeními",
     "signedOutText": "Přihlaste se testovacím účtem do pracovního prostoru pro klienta a terapeuta.",
+    "roleSwitchLabel": "Přihlásit se jako",
     "signIn": "Přihlásit se přes Google",
     "signingIn": "Přesměrovávám…",
     "signOut": "Odhlásit se",
@@ -44,10 +45,14 @@
     "unavailableText": "Tento odkaz není dostupný pro přihlášený účet.",
     "backToOverview": "Přejít na přehled",
     "title": "Společný pracovní prostor",
+    "infoMenu": "Informace",
     "messagesComingSoon": "Zprávy přidáme v další verzi."
   },
+  "user": {
+    "menuLabel": "Účet"
+  },
   "theme": {
-    "groupLabel": "Barevný motiv",
+    "groupLabel": "Motiv",
     "colors": {
       "blue": "Modrá",
       "brown": "Hnědá",

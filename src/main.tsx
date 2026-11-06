@@ -4,179 +4,40 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import './i18n'
 import { Trans, useTranslation } from 'react-i18next'
-import { useFixedTheme, useThemeCatalog, useWorkspaceTheme } from './theme'
-import type { ThemeRole } from './theme'
-import { Button } from './ui/Button'
-import { ConnectionCard } from './ui/ConnectionCard'
-import { ConnectionSection } from './ui/ConnectionSection'
+import { useFixedTheme, useThemeCatalog } from './theme'
 import { Layout } from './ui/Layout'
-import { ThemeSelector } from './ui/ThemeSelector'
+import { LoggedInScreen } from './screens/LoggedInScreen'
+import { LoggedOutScreen } from './screens/LoggedOutScreen'
+import { UserMenu } from './screens/UserMenu'
+import { currentRole, storeRole } from './screens/roleRoute'
+import type { Role } from './screens/roleRoute'
+import { getWorkspaceId } from './screens/workspaceData'
 import './style.css'
 
-type Workspace = {
-  id: string
-  therapist_id: string
-  client_id: string
-  therapist: { display_name: string } | null
-  client: { display_name: string } | null
-}
-
-type WorkspacesState =
-  { status: 'loading' } | { status: 'error' } | { status: 'ready'; rows: Workspace[] }
-
-const workspaceId = new URLSearchParams(window.location.search).get('workspace')
-const validWorkspaceId = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i
 const authResponse = new URL(window.location.href)
 const callbackError =
   authResponse.searchParams.has('error') ||
   new URLSearchParams(authResponse.hash.slice(1)).has('error')
 const callbackCode = authResponse.searchParams.has('code')
 
-function WorkspaceList({
-  db,
-  userId,
-  themes,
-}: {
-  db: SupabaseClient
-  userId: string
-  themes: ReturnType<typeof useThemeCatalog>
-}) {
-  const { t } = useTranslation()
-  const [state, setState] = useState<WorkspacesState>({ status: 'loading' })
-
-  useEffect(() => {
-    if (workspaceId !== null && !validWorkspaceId.test(workspaceId)) {
-      setState({ status: 'ready', rows: [] })
-      return
-    }
-
-    const controller = new AbortController()
-    const query = db.from('workspaces').select(`
-        id, therapist_id, client_id,
-        therapist:profiles!workspaces_therapist_id_fkey(display_name),
-        client:profiles!workspaces_client_id_fkey(display_name)
-      `)
-
-    async function load() {
-      try {
-        const request = workspaceId === null ? query : query.eq('id', workspaceId)
-        const { data, error } = await request.abortSignal(controller.signal)
-        if (controller.signal.aborted) return
-        // supabase-js infers embedded-relation cardinality from the select
-        // string without generated Database types, and can't tell a to-one
-        // foreign key embed (therapist_id/client_id -> profiles.id) from a
-        // to-many one — it defaults to typing both as arrays. PostgREST
-        // still returns a single object per row here, so the cast reflects
-        // actual runtime shape rather than the generic inferred type.
-        setState(
-          error ? { status: 'error' } : { status: 'ready', rows: data as unknown as Workspace[] },
-        )
-      } catch {
-        if (!controller.signal.aborted) setState({ status: 'error' })
-      }
-    }
-
-    void load()
-    return () => controller.abort()
-  }, [db])
-
-  const singleWorkspace =
-    state.status === 'ready' && workspaceId !== null && state.rows.length === 1
-      ? state.rows[0]
-      : null
-  const role: ThemeRole = singleWorkspace?.therapist_id === userId ? 'therapist' : 'client'
-  const { themeId, choose } = useWorkspaceTheme(db, themes, userId, singleWorkspace?.id ?? '', role)
-  // No valid single workspace to open (loading, missing, or inaccessible):
-  // fall back to the same theme as the rest of the signed-in app.
-  useFixedTheme(themes, workspaceId !== null && !singleWorkspace ? 'signed_in' : null)
-
-  if (state.status === 'loading') return <p role='status'>{t('workspace.loading')}</p>
-  if (state.status === 'error') {
-    return <p role='alert'>{t('workspace.loadFailed')}</p>
-  }
-  if (workspaceId === null) {
-    const asTherapist = state.rows.filter((workspace) => workspace.therapist_id === userId)
-    const asClient = state.rows.filter((workspace) => workspace.client_id === userId)
-    return (
-      <>
-        <h1>{t('connections.overview')}</h1>
-        <ConnectionSection
-          title={t('connections.myClients')}
-          emptyText={t('connections.noClients')}
-          actions={
-            <Button variant='secondary' disabled title={t('connections.invitesComingSoon')}>
-              {t('connections.inviteClient')}
-            </Button>
-          }>
-          {asTherapist.map((workspace) => (
-            <ConnectionCard
-              key={workspace.id}
-              counterpartName={workspace.client?.display_name ?? '—'}
-              openHref={`/?workspace=${workspace.id}`}
-            />
-          ))}
-        </ConnectionSection>
-        <ConnectionSection
-          title={t('connections.myTherapists')}
-          emptyText={t('connections.noTherapists')}>
-          {asClient.map((workspace) => (
-            <ConnectionCard
-              key={workspace.id}
-              counterpartName={workspace.therapist?.display_name ?? '—'}
-              openHref={`/?workspace=${workspace.id}`}
-            />
-          ))}
-        </ConnectionSection>
-      </>
-    )
-  }
-
-  if (state.rows.length === 0) {
-    return (
-      <>
-        <h1>{t('workspace.unavailableTitle')}</h1>
-        <p>{t('workspace.unavailableText')}</p>
-        <a className='text-brand-700 underline' href='/'>
-          {t('workspace.backToOverview')}
-        </a>
-      </>
-    )
-  }
-
-  const workspace = state.rows[0]
-  const isTherapist = workspace.therapist_id === userId
-  return (
-    <>
-      <h1>{t('workspace.title')}</h1>
-      <ConnectionCard
-        roleLabel={t(isTherapist ? 'connections.roles.therapist' : 'connections.roles.client')}
-        counterpartLabel={t(isTherapist ? 'connections.yourClient' : 'connections.yourTherapist')}
-        counterpartName={
-          (isTherapist ? workspace.client : workspace.therapist)?.display_name ?? '—'
-        }
-      />
-      {themes && (
-        <div className='mt-4'>
-          <p className='mb-2 text-sm font-semibold text-brand-700'>{t('theme.groupLabel')}</p>
-          <ThemeSelector themes={themes} activeThemeId={themeId} onChoose={choose} />
-        </div>
-      )}
-      <p>{t('workspace.messagesComingSoon')}</p>
-    </>
-  )
-}
-
 function AuthenticatedApp({ db }: { db: SupabaseClient }) {
   const { t } = useTranslation()
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [role, setRole] = useState<Role>(currentRole)
   const themes = useThemeCatalog(db)
-  // WorkspaceList owns theming, but only while it's actually mounted (signed
+
+  function chooseRole(next: Role) {
+    storeRole(next)
+    window.history.replaceState(null, '', `/${next}${window.location.search}`)
+    setRole(next)
+  }
+  // LoggedInScreen owns theming, but only while it's actually mounted (signed
   // in with a specific workspace in the URL). Signed out always wins here,
-  // regardless of the URL, since WorkspaceList never renders in that case —
+  // regardless of the URL, since LoggedInScreen never renders in that case —
   // otherwise signing out while viewing a workspace left its theme stuck.
-  useFixedTheme(themes, !session ? 'signed_out' : workspaceId === null ? 'signed_in' : null)
+  useFixedTheme(themes, !session ? 'signed_out' : getWorkspaceId() === null ? 'signed_in' : null)
 
   useEffect(() => {
     const {
@@ -184,7 +45,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
     } = db.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'INITIAL_SESSION' && !nextSession && (callbackError || callbackCode)) {
         setError(t('auth.signInFailed'))
-        window.history.replaceState(null, '', '/')
+        window.history.replaceState(null, '', window.location.pathname)
       }
       setSession(nextSession)
     })
@@ -198,7 +59,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
       const { error: signInError } = await db.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: new URL('/', window.location.href).href,
+          redirectTo: window.location.origin + window.location.pathname + window.location.search,
           queryParams: { prompt: 'select_account' },
         },
       })
@@ -215,6 +76,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
     try {
       const { error: signOutError } = await db.auth.signOut({ scope: 'local' })
       if (signOutError) throw signOutError
+      window.history.replaceState(null, '', `/${role}`)
     } catch {
       setError(t('auth.signOutFailed'))
     } finally {
@@ -231,24 +93,29 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
 
   return (
     <Layout
+      roleLabel={session ? t(`connections.roles.${role}`) : undefined}
       actions={
         session && (
-          <Button variant='secondary' disabled={busy} onClick={signOut}>
-            {t('auth.signOut')}
-          </Button>
+          <UserMenu
+            db={db}
+            userId={session.user.id}
+            role={role}
+            busy={busy}
+            onSignOut={signOut}
+          />
         )
       }>
       {error && <p role='alert'>{error}</p>}
       {session ? (
-        <WorkspaceList key={session.user.id} db={db} userId={session.user.id} themes={themes} />
+        <LoggedInScreen
+          key={session.user.id}
+          db={db}
+          userId={session.user.id}
+          role={role}
+          themes={themes}
+        />
       ) : (
-        <>
-          <h1>{t('auth.signedOutTitle')}</h1>
-          <p>{t('auth.signedOutText')}</p>
-          <Button disabled={busy} onClick={signIn} className='mt-4'>
-            {busy ? t('auth.signingIn') : t('auth.signIn')}
-          </Button>
-        </>
+        <LoggedOutScreen role={role} busy={busy} onChooseRole={chooseRole} onSignIn={signIn} />
       )}
     </Layout>
   )
