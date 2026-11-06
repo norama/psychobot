@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 export function ConnectionCard({
   roleLabel,
   counterpartLabel,
@@ -9,12 +11,13 @@ export function ConnectionCard({
   counterpartName: string
   openHref?: string
 }) {
+  const { t } = useTranslation()
   return (
-    <section className='connection' aria-label='Propojení'>
+    <section className='connection' aria-label={t('connections.cardLabel')}>
       <dl>
         {roleLabel && (
           <div>
-            <dt>Vaše role</dt>
+            <dt>{t('connections.yourRole')}</dt>
             <dd>{roleLabel}</dd>
           </div>
         )}
@@ -25,7 +28,7 @@ export function ConnectionCard({
       </dl>
       {openHref && (
         <a className='mt-4 inline-block text-brand-700 underline' href={openHref}>
-          Otevřít pracovní prostor
+          {t('connections.openWorkspace')}
         </a>
       )}
     </section>

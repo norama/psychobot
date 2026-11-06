@@ -2,6 +2,8 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import './i18n'
+import { Trans, useTranslation } from 'react-i18next'
 import { useFixedTheme, useThemeCatalog, useWorkspaceTheme } from './theme'
 import type { ThemeRole } from './theme'
 import { Button } from './ui/Button'
@@ -39,6 +41,7 @@ function WorkspaceList({
   userId: string
   themes: ReturnType<typeof useThemeCatalog>
 }) {
+  const { t } = useTranslation()
   const [state, setState] = useState<WorkspacesState>({ status: 'loading' })
 
   useEffect(() => {
@@ -87,22 +90,22 @@ function WorkspaceList({
   // fall back to the same theme as the rest of the signed-in app.
   useFixedTheme(themes, workspaceId !== null && !singleWorkspace ? 'signed_in' : null)
 
-  if (state.status === 'loading') return <p role='status'>Načítám pracovní prostor…</p>
+  if (state.status === 'loading') return <p role='status'>{t('workspace.loading')}</p>
   if (state.status === 'error') {
-    return <p role='alert'>Pracovní prostor se nepodařilo načíst. Zkuste obnovit stránku.</p>
+    return <p role='alert'>{t('workspace.loadFailed')}</p>
   }
   if (workspaceId === null) {
     const asTherapist = state.rows.filter((workspace) => workspace.therapist_id === userId)
     const asClient = state.rows.filter((workspace) => workspace.client_id === userId)
     return (
       <>
-        <h1>Přehled propojení</h1>
+        <h1>{t('connections.overview')}</h1>
         <ConnectionSection
-          title='Moji klienti'
-          emptyText='Zatím žádní klienti.'
+          title={t('connections.myClients')}
+          emptyText={t('connections.noClients')}
           actions={
-            <Button variant='secondary' disabled title='Pozvánky budou dostupné v další verzi.'>
-              Pozvat klienta
+            <Button variant='secondary' disabled title={t('connections.invitesComingSoon')}>
+              {t('connections.inviteClient')}
             </Button>
           }>
           {asTherapist.map((workspace) => (
@@ -113,7 +116,9 @@ function WorkspaceList({
             />
           ))}
         </ConnectionSection>
-        <ConnectionSection title='Moji terapeuti' emptyText='Zatím žádní terapeuti.'>
+        <ConnectionSection
+          title={t('connections.myTherapists')}
+          emptyText={t('connections.noTherapists')}>
           {asClient.map((workspace) => (
             <ConnectionCard
               key={workspace.id}
@@ -129,10 +134,10 @@ function WorkspaceList({
   if (state.rows.length === 0) {
     return (
       <>
-        <h1>Pracovní prostor není dostupný</h1>
-        <p>Tento odkaz není dostupný pro přihlášený účet.</p>
+        <h1>{t('workspace.unavailableTitle')}</h1>
+        <p>{t('workspace.unavailableText')}</p>
         <a className='text-brand-700 underline' href='/'>
-          Přejít na přehled
+          {t('workspace.backToOverview')}
         </a>
       </>
     )
@@ -142,26 +147,27 @@ function WorkspaceList({
   const isTherapist = workspace.therapist_id === userId
   return (
     <>
-      <h1>Společný pracovní prostor</h1>
+      <h1>{t('workspace.title')}</h1>
       <ConnectionCard
-        roleLabel={isTherapist ? 'Terapeut' : 'Klient'}
-        counterpartLabel={isTherapist ? 'Váš klient' : 'Váš terapeut'}
+        roleLabel={t(isTherapist ? 'connections.roles.therapist' : 'connections.roles.client')}
+        counterpartLabel={t(isTherapist ? 'connections.yourClient' : 'connections.yourTherapist')}
         counterpartName={
           (isTherapist ? workspace.client : workspace.therapist)?.display_name ?? '—'
         }
       />
       {themes && (
         <div className='mt-4'>
-          <p className='mb-2 text-sm font-semibold text-brand-700'>Barevný motiv</p>
+          <p className='mb-2 text-sm font-semibold text-brand-700'>{t('theme.groupLabel')}</p>
           <ThemeSelector themes={themes} activeThemeId={themeId} onChoose={choose} />
         </div>
       )}
-      <p>Zprávy přidáme v další verzi.</p>
+      <p>{t('workspace.messagesComingSoon')}</p>
     </>
   )
 }
 
 function AuthenticatedApp({ db }: { db: SupabaseClient }) {
+  const { t } = useTranslation()
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -177,13 +183,13 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
       data: { subscription },
     } = db.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'INITIAL_SESSION' && !nextSession && (callbackError || callbackCode)) {
-        setError('Přihlášení se nepodařilo. Zkuste to znovu.')
+        setError(t('auth.signInFailed'))
         window.history.replaceState(null, '', '/')
       }
       setSession(nextSession)
     })
     return () => subscription.unsubscribe()
-  }, [db])
+  }, [db, t])
 
   async function signIn() {
     setBusy(true)
@@ -198,7 +204,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
       })
       if (signInError) throw signInError
     } catch {
-      setError('Přihlášení se nepodařilo. Zkuste to znovu.')
+      setError(t('auth.signInFailed'))
       setBusy(false)
     }
   }
@@ -210,7 +216,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
       const { error: signOutError } = await db.auth.signOut({ scope: 'local' })
       if (signOutError) throw signOutError
     } catch {
-      setError('Odhlášení se nepodařilo. Zkuste to znovu.')
+      setError(t('auth.signOutFailed'))
     } finally {
       setBusy(false)
     }
@@ -219,7 +225,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
   if (session === undefined)
     return (
       <Layout>
-        <p role='status'>Ověřuji přihlášení…</p>
+        <p role='status'>{t('auth.checking')}</p>
       </Layout>
     )
 
@@ -228,7 +234,7 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
       actions={
         session && (
           <Button variant='secondary' disabled={busy} onClick={signOut}>
-            Odhlásit se
+            {t('auth.signOut')}
           </Button>
         )
       }>
@@ -237,10 +243,10 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
         <WorkspaceList key={session.user.id} db={db} userId={session.user.id} themes={themes} />
       ) : (
         <>
-          <h1>Mezi sezeními</h1>
-          <p>Přihlaste se testovacím účtem do pracovního prostoru pro klienta a terapeuta.</p>
-          <Button disabled={busy} onClick={signIn}>
-            {busy ? 'Přesměrovávám…' : 'Přihlásit se přes Google'}
+          <h1>{t('auth.signedOutTitle')}</h1>
+          <p>{t('auth.signedOutText')}</p>
+          <Button disabled={busy} onClick={signIn} className='mt-4'>
+            {busy ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </>
       )}
@@ -249,13 +255,13 @@ function AuthenticatedApp({ db }: { db: SupabaseClient }) {
 }
 
 function App() {
+  const { t } = useTranslation()
   if (supabase) return <AuthenticatedApp db={supabase} />
   return (
     <Layout>
-      <h1>Připojte Supabase</h1>
+      <h1>{t('setup.title')}</h1>
       <p>
-        V souboru <code>.env.local</code> nastavte adresu projektu a veřejný klíč podle pokynů v
-        README.
+        <Trans i18nKey='setup.text' components={{ code: <code /> }} />
       </p>
     </Layout>
   )
