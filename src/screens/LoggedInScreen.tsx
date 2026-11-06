@@ -91,6 +91,18 @@ export function LoggedInScreen({ db, userId, role, themes }: LoggedInScreenProps
     }
   }, [state, workspaceId, userId])
 
+  // The workspace's real role comes from the data. If the URL names the other
+  // role (e.g. typed by hand), reload on the matching path instead.
+  const dataRole: Role | null = singleWorkspace
+    ? singleWorkspace.therapist_id === userId
+      ? 'therapist'
+      : 'client'
+    : null
+  useEffect(() => {
+    if (dataRole === null || dataRole === role || workspaceId === null) return
+    window.location.replace(`/${dataRole}?workspace=${workspaceId}`)
+  }, [dataRole, role, workspaceId])
+
   if (state.status === 'loading') return <p role='status'>{t('workspace.loading')}</p>
   if (state.status === 'error') {
     return <p role='alert'>{t('workspace.loadFailed')}</p>
