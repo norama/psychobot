@@ -33,6 +33,7 @@ function AuthenticatedApp() {
   return (
     <Layout
       roleLabel={session ? t(`connections.roles.${role}`) : undefined}
+      narrow={!session || getWorkspaceId() === null}
       actions={
         session && (
           <UserMenu db={db} userId={session.user.id} role={role} busy={busy} onSignOut={signOut} />

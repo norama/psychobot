@@ -23,10 +23,14 @@ export function Layout({
   children,
   actions,
   roleLabel,
+  narrow = true,
 }: {
   children: ReactNode
   actions?: ReactNode
   roleLabel?: string
+  // Workspace screens (with their chat) need the full available width;
+  // every other screen stays narrow and readable.
+  narrow?: boolean
 }) {
   const { t } = useTranslation()
   const [menus, setMenus] = useState<HTMLDivElement | null>(null)
@@ -34,7 +38,8 @@ export function Layout({
   return (
     <HeaderSlotContext.Provider value={{ menus, details }}>
       <div className='min-h-screen bg-brand-50 text-brand-950'>
-        <div className='mx-auto w-[min(100%-2rem,42rem)] py-8'>
+        <div
+          className={`mx-auto w-[calc(100%-2rem)] py-8 ${narrow ? 'max-w-[42rem]' : ''}`}>
           <header className='sticky top-0 z-20 mb-4 bg-brand-50 py-4'>
             <div className='flex items-center justify-between gap-4'>
               <a className='font-bold text-brand-900 no-underline' href='/'>
