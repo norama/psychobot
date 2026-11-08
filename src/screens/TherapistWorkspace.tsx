@@ -1,4 +1,4 @@
-import type { useThemeCatalog, useWorkspaceTheme } from '@/theme'
+import type { useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
 import { useTranslation } from 'react-i18next'
 import { HeaderDetails, HeaderMenus } from '@/ui/Layout'
 import { Menu } from '@/ui/Menu'

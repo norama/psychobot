@@ -1,4 +1,4 @@
-import type { Role } from '@/screens/roleRoute'
+import type { Role } from '@/util/roleRoute'
 
 export type Workspace = {
   id: string

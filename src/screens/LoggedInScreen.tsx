@@ -1,72 +1,28 @@
-import { useEffect, useState } from 'react'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { useTranslation } from 'react-i18next'
-import { useFixedTheme, useThemeCatalog, useWorkspaceTheme } from '@/theme'
-import type { ThemeRole } from '@/theme'
+import type { ThemeRole } from '@/db/theme'
+import { useFixedTheme, useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
+import { useWorkspaces } from '@/db/workspaces'
+import { ClientWorkspace } from '@/screens/ClientWorkspace'
+import { TherapistWorkspace } from '@/screens/TherapistWorkspace'
 import { Button } from '@/ui/Button'
 import { ConnectionCard } from '@/ui/ConnectionCard'
 import { ConnectionSection } from '@/ui/ConnectionSection'
-import { ClientWorkspace } from '@/screens/ClientWorkspace'
-import { TherapistWorkspace } from '@/screens/TherapistWorkspace'
-import { clearStoredWorkspace, getWorkspaceId, storeWorkspace, validWorkspaceId } from '@/screens/workspaceData'
-import type { Workspace, WorkspacesState } from '@/screens/workspaceData'
-import type { Role } from '@/screens/roleRoute'
+import type { Role } from '@/util/roleRoute'
+import { clearStoredWorkspace, storeWorkspace } from '@/util/workspaceData'
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type LoggedInScreenProps = {
-  db: SupabaseClient
   userId: string
   role: Role
   themes: ReturnType<typeof useThemeCatalog>
 }
 
-export function LoggedInScreen({ db, userId, role, themes }: LoggedInScreenProps) {
+export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
   const { t } = useTranslation()
-  const workspaceId = getWorkspaceId()
-  const [state, setState] = useState<WorkspacesState>({ status: 'loading' })
+  const { state, singleWorkspace, workspaceId } = useWorkspaces(userId)
 
-  useEffect(() => {
-    if (workspaceId !== null && !validWorkspaceId.test(workspaceId)) {
-      setState({ status: 'ready', rows: [] })
-      return
-    }
-
-    const controller = new AbortController()
-    const query = db.from('workspaces').select(`
-        id, therapist_id, client_id,
-        therapist:profiles!workspaces_therapist_id_fkey(display_name),
-        client:profiles!workspaces_client_id_fkey(display_name)
-      `)
-
-    async function load() {
-      try {
-        const request = workspaceId === null ? query : query.eq('id', workspaceId)
-        const { data, error } = await request.abortSignal(controller.signal)
-        if (controller.signal.aborted) return
-        // supabase-js infers embedded-relation cardinality from the select
-        // string without generated Database types, and can't tell a to-one
-        // foreign key embed (therapist_id/client_id -> profiles.id) from a
-        // to-many one — it defaults to typing both as arrays. PostgREST
-        // still returns a single object per row here, so the cast reflects
-        // actual runtime shape rather than the generic inferred type.
-        setState(
-          error ? { status: 'error' } : { status: 'ready', rows: data as unknown as Workspace[] },
-        )
-      } catch {
-        if (!controller.signal.aborted) setState({ status: 'error' })
-      }
-    }
-
-    void load()
-    return () => controller.abort()
-  }, [db, workspaceId])
-
-  const singleWorkspace =
-    state.status === 'ready' && workspaceId !== null && state.rows.length === 1
-      ? state.rows[0]
-      : null
   const themeRole: ThemeRole = singleWorkspace?.therapist_id === userId ? 'therapist' : 'client'
   const { themeId, choose } = useWorkspaceTheme(
-    db,
     themes,
     userId,
     singleWorkspace?.id ?? '',

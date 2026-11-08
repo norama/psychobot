@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { db } from './supabase'
 
 export type ThemeCategory = 'signed_out' | 'signed_in' | 'workspace'
 export type ThemeRole = 'therapist' | 'client'
@@ -20,7 +20,7 @@ function applyTheme(theme: Pick<Theme, 'hue' | 'saturation'>) {
 
 // Fetches the small, shared theme catalog once. Open to read for every
 // session (even signed out), so no auth dependency here.
-export function useThemeCatalog(db: SupabaseClient) {
+export function useThemeCatalog() {
   const [themes, setThemes] = useState<Theme[] | null>(null)
 
   useEffect(() => {
@@ -52,7 +52,6 @@ export function useFixedTheme(themes: Theme[] | null, category: ThemeCategory | 
 // default when nothing is saved yet. Pass workspaceId as '' to opt out
 // (no valid single workspace in view right now).
 export function useWorkspaceTheme(
-  db: SupabaseClient,
   themes: Theme[] | null,
   userId: string,
   workspaceId: string,
@@ -81,13 +80,16 @@ export function useWorkspaceTheme(
     if (!themes || !workspaceId || themeId === undefined) return
     const active = themeId
       ? themes.find((candidate) => candidate.id === themeId)
-      : themes.find((candidate) => candidate.category === 'workspace' && candidate.default_for_role === role)
+      : themes.find(
+          (candidate) => candidate.category === 'workspace' && candidate.default_for_role === role,
+        )
     if (active) applyTheme(active)
   }, [themes, workspaceId, themeId, role])
 
   async function choose(nextThemeId: string) {
     setThemeId(nextThemeId)
-    await db.from('workspace_theme_preferences')
+    await db
+      .from('workspace_theme_preferences')
       .upsert({ user_id: userId, workspace_id: workspaceId, theme_id: nextThemeId })
   }
 

@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { useTranslation } from 'react-i18next'
 import { Button } from '@/ui/Button'
 import { Menu } from '@/ui/Menu'
-import type { Role } from '@/screens/roleRoute'
+import type { Role } from '@/util/roleRoute'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type UserMenuProps = {
   db: SupabaseClient

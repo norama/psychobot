@@ -1,4 +1,4 @@
-import { getStoredWorkspace } from '@/screens/workspaceData'
+import { getStoredWorkspace } from './workspaceData'
 
 export type Role = 'therapist' | 'client'
 
@@ -27,11 +27,7 @@ function resolveRole(): Role {
     window.location.pathname === '/' && !window.location.search ? getStoredWorkspace() : null
   if (lastWorkspace) {
     storeRole(lastWorkspace.role)
-    window.history.replaceState(
-      null,
-      '',
-      `/${lastWorkspace.role}?workspace=${lastWorkspace.id}`,
-    )
+    window.history.replaceState(null, '', `/${lastWorkspace.role}?workspace=${lastWorkspace.id}`)
     return lastWorkspace.role
   }
   const role = getStoredRole() ?? 'client'

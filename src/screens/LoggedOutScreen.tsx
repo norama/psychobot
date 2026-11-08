@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next'
 import { Button } from '@/ui/Button'
-import type { Role } from '@/screens/roleRoute'
+import type { Role } from '@/util/roleRoute'
+import { useTranslation } from 'react-i18next'
 
 type LoggedOutScreenProps = {
   role: Role

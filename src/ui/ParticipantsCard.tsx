@@ -1,5 +1,5 @@
+import type { Role } from '@/util/roleRoute'
 import { useTranslation } from 'react-i18next'
-import type { Role } from '@/screens/roleRoute'
 
 export function ParticipantsCard({
   therapistName,
