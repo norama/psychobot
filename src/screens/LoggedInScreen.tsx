@@ -1,9 +1,9 @@
+import { InviteButton } from '@/components/InviteButton'
 import type { ThemeRole } from '@/db/theme'
 import { useFixedTheme, useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
 import { useWorkspaces } from '@/db/workspaces'
 import { ClientWorkspace } from '@/screens/ClientWorkspace'
 import { TherapistWorkspace } from '@/screens/TherapistWorkspace'
-import { Button } from '@/ui/Button'
 import { ConnectionCard } from '@/ui/ConnectionCard'
 import { ConnectionSection } from '@/ui/ConnectionSection'
 import type { Role } from '@/util/roleRoute'
@@ -73,11 +73,7 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
           <ConnectionSection
             title={t('connections.myClients')}
             emptyText={t('connections.noClients')}
-            actions={
-              <Button variant='secondary' disabled title={t('connections.invitesComingSoon')}>
-                {t('connections.inviteClient')}
-              </Button>
-            }>
+            actions={<InviteButton />}>
             {asTherapist.map((workspace) => (
               <ConnectionCard
                 key={workspace.id}

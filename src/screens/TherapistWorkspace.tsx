@@ -1,11 +1,11 @@
 import type { useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
-import { useTranslation } from 'react-i18next'
+import { ConnectionCard } from '@/ui/ConnectionCard'
 import { HeaderDetails, HeaderMenus } from '@/ui/Layout'
 import { Menu } from '@/ui/Menu'
 import { ParticipantsCard } from '@/ui/ParticipantsCard'
 import { ThemeSelector } from '@/ui/ThemeSelector'
-import type { Workspace } from '@/screens/workspaceData'
-import { ConnectionCard } from '@/ui/ConnectionCard'
+import type { Workspace } from '@/util/workspaceData'
+import { useTranslation } from 'react-i18next'
 
 type TherapistWorkspaceProps = {
   workspace: Workspace

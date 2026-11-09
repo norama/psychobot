@@ -36,7 +36,10 @@
     "myTherapists": "Moji terapeuti",
     "noTherapists": "Zatím žádní terapeuti.",
     "inviteClient": "Pozvat klienta",
-    "invitesComingSoon": "Pozvánky budou dostupné v další verzi."
+    "invitesComingSoon": "Pozvánky budou dostupné v další verzi.",
+    "testFunction": "Otestovat funkci",
+    "testingFunction": "Testování…",
+    "functionTestFailed": "Test funkce se nezdařil."
   },
   "workspace": {
     "loading": "Načítám pracovní prostor…",
