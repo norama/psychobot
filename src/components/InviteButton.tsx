@@ -9,12 +9,19 @@ export function InviteButton() {
   async function handleTestFunction() {
     setTestingFunction(true)
 
+    const email = window.prompt(t('connections.testRecipientEmail'))
+
+    if (!email) {
+      setTestingFunction(false)
+      return
+    }
+
     try {
-      const message = await testEmailFunction()
+      const message = await testEmailFunction(email.trim())
       window.alert(message)
     } catch (error) {
       console.error('Edge Function test failed:', error)
-      window.alert(t('connections.functionTestFailed'))
+      window.alert(error instanceof Error ? error.message : t('connections.functionTestFailed'))
     } finally {
       setTestingFunction(false)
     }

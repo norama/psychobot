@@ -39,6 +39,7 @@
     "invitesComingSoon": "Pozvánky budou dostupné v další verzi.",
     "testFunction": "Otestovat funkci",
     "testingFunction": "Testování…",
+    "testRecipientEmail": "Zadejte e-mail testovacího příjemce",
     "functionTestFailed": "Test funkce se nezdařil."
   },
   "workspace": {
