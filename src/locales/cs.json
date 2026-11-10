@@ -40,6 +40,9 @@
     "testFunction": "Otestovat funkci",
     "testingFunction": "Testování…",
     "testRecipientEmail": "Zadejte e-mail testovacího příjemce",
+    "recipientEmail": "E-mail klienta:",
+    "invitationCreated": "Pozvání vytvořeno. Zkopírujte si odkaz:",
+    "invitationFailed": "Nepodařilo se vytvořit pozvání.",
     "functionTestFailed": "Test funkce se nezdařil."
   },
   "workspace": {

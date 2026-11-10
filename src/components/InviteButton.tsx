@@ -1,38 +1,40 @@
-import { testEmailFunction } from '@/db/emailTest'
+import { createInvitation } from '@/db/invitations'
 import { Button } from '@/ui/Button'
 import { t } from 'i18next'
 import { useState } from 'react'
 
 export function InviteButton() {
-  const [testingFunction, setTestingFunction] = useState(false)
+  const [isCreatingInvitation, setIsCreatingInvitation] = useState(false)
 
-  async function handleTestFunction() {
-    setTestingFunction(true)
+  async function handleInviteClient() {
+    const recipient = window.prompt(t('connections.recipientEmail'))
+    if (!recipient?.trim()) return
 
-    const email = window.prompt(t('connections.testRecipientEmail'))
-
-    if (!email) {
-      setTestingFunction(false)
-      return
-    }
+    setIsCreatingInvitation(true)
 
     try {
-      const message = await testEmailFunction(email.trim())
-      window.alert(message)
+      const invitation = await createInvitation(recipient)
+      if (!invitation || !invitation.invitationUrl) {
+        throw new Error(t('connections.invitationFailed'))
+      }
+
+      console.log('Invitation created:', invitation)
+
+      window.prompt(invitation.message, invitation.invitationUrl)
     } catch (error) {
-      console.error('Edge Function test failed:', error)
-      window.alert(error instanceof Error ? error.message : t('connections.functionTestFailed'))
+      window.alert(error instanceof Error ? error.message : t('connections.invitationFailed'))
     } finally {
-      setTestingFunction(false)
+      setIsCreatingInvitation(false)
     }
   }
+
   return (
     <Button
       variant='secondary'
-      disabled={testingFunction}
+      disabled={isCreatingInvitation}
       title={t('connections.invitesComingSoon')}
-      onClick={handleTestFunction}>
-      {testingFunction ? t('connections.testingFunction') : t('connections.testFunction')}
+      onClick={handleInviteClient}>
+      {t('connections.inviteClient')}
     </Button>
   )
 }
