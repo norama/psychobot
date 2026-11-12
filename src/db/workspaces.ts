@@ -1,30 +1,38 @@
-import type { Workspace, WorkspacesState } from '@/util/workspaceData'
-import { getWorkspaceId, validWorkspaceId } from '@/util/workspaceData'
-import { useEffect, useState } from 'react'
-import { db } from './supabase'
+import type { Role } from "@/util/roleRoute";
+import type { Workspace, WorkspacesState } from "@/util/workspaceData";
+import { getWorkspaceId, validWorkspaceId } from "@/util/workspaceData";
+import { useEffect, useState } from "react";
+import { db } from "./supabase";
 
-export function useWorkspaces(userId: string) {
-  const workspaceId = getWorkspaceId()
-  const [state, setState] = useState<WorkspacesState>({ status: 'loading' })
+export function useWorkspaces(userId: string, role: Role) {
+  const workspaceId = getWorkspaceId();
+  const [state, setState] = useState<WorkspacesState>({ status: "loading" });
 
   useEffect(() => {
     if (workspaceId !== null && !validWorkspaceId.test(workspaceId)) {
-      setState({ status: 'ready', rows: [] })
-      return
+      setState({ status: "ready", rows: [] });
+      return;
     }
 
-    const controller = new AbortController()
-    const query = db.from('workspaces').select(`
+    setState({ status: "loading" });
+
+    const controller = new AbortController();
+    const query = db.from("workspaces").select(`
         id, therapist_id, client_id,
         therapist:profiles!workspaces_therapist_id_fkey(display_name),
         client:profiles!workspaces_client_id_fkey(display_name)
-      `)
+      `);
 
     async function load() {
       try {
-        const request = workspaceId === null ? query : query.eq('id', workspaceId)
-        const { data, error } = await request.abortSignal(controller.signal)
-        if (controller.signal.aborted) return
+        const request = workspaceId === null
+          ? query.eq(
+            role === "therapist" ? "therapist_id" : "client_id",
+            userId,
+          )
+          : query.eq("id", workspaceId);
+        const { data, error } = await request.abortSignal(controller.signal);
+        if (controller.signal.aborted) return;
         // supabase-js infers embedded-relation cardinality from the select
         // string without generated Database types, and can't tell a to-one
         // foreign key embed (therapist_id/client_id -> profiles.id) from a
@@ -32,21 +40,23 @@ export function useWorkspaces(userId: string) {
         // still returns a single object per row here, so the cast reflects
         // actual runtime shape rather than the generic inferred type.
         setState(
-          error ? { status: 'error' } : { status: 'ready', rows: data as unknown as Workspace[] },
-        )
+          error
+            ? { status: "error" }
+            : { status: "ready", rows: data as unknown as Workspace[] },
+        );
       } catch {
-        if (!controller.signal.aborted) setState({ status: 'error' })
+        if (!controller.signal.aborted) setState({ status: "error" });
       }
     }
 
-    void load()
-    return () => controller.abort()
-  }, [db, workspaceId])
+    void load();
+    return () => controller.abort();
+  }, [db, workspaceId, userId, role]);
 
   const singleWorkspace =
-    state.status === 'ready' && workspaceId !== null && state.rows.length === 1
+    state.status === "ready" && workspaceId !== null && state.rows.length === 1
       ? state.rows[0]
-      : null
+      : null;
 
-  return { state, singleWorkspace, workspaceId }
+  return { state, singleWorkspace, workspaceId };
 }

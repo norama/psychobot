@@ -19,7 +19,7 @@ type LoggedInScreenProps = {
 
 export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
   const { t } = useTranslation()
-  const { state, singleWorkspace, workspaceId } = useWorkspaces(userId)
+  const { state, singleWorkspace, workspaceId } = useWorkspaces(userId, role)
 
   const themeRole: ThemeRole = singleWorkspace?.therapist_id === userId ? 'therapist' : 'client'
   const { themeId, choose } = useWorkspaceTheme(
@@ -64,8 +64,6 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
     return <p role='alert'>{t('workspace.loadFailed')}</p>
   }
   if (workspaceId === null) {
-    const asTherapist = state.rows.filter((workspace) => workspace.therapist_id === userId)
-    const asClient = state.rows.filter((workspace) => workspace.client_id === userId)
     return (
       <>
         <h1>{t('connections.overview')}</h1>
@@ -74,7 +72,7 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
             title={t('connections.myClients')}
             emptyText={t('connections.noClients')}
             actions={<InviteButton />}>
-            {asTherapist.map((workspace) => (
+            {state.rows.map((workspace) => (
               <ConnectionCard
                 key={workspace.id}
                 counterpartName={workspace.client?.display_name ?? '—'}
@@ -87,7 +85,7 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
           <ConnectionSection
             title={t('connections.myTherapists')}
             emptyText={t('connections.noTherapists')}>
-            {asClient.map((workspace) => (
+            {state.rows.map((workspace) => (
               <ConnectionCard
                 key={workspace.id}
                 counterpartName={workspace.therapist?.display_name ?? '—'}
