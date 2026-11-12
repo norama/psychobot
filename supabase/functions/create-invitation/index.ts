@@ -8,6 +8,12 @@ import { withSupabase } from "@supabase/server";
 import { sendEmail } from "./email.ts";
 import { createInvitationToken } from "./util.ts";
 
+type InvitationResult = {
+  id: string;
+  invited_email: string;
+  expires_at: string;
+};
+
 async function getRecipient(req: Request): Promise<string | null> {
   try {
     const body: unknown = await req.json();
@@ -119,7 +125,8 @@ export default {
           token_hash: tokenHash,
         })
         .select("id, invited_email, expires_at")
-        .single();
+        .single()
+        .overrideTypes<InvitationResult, { merge: false }>();
 
       if (error) {
         if (error.code === "23505") { // Unique constraint violation (duplicate pending invitation)

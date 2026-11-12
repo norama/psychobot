@@ -8,13 +8,27 @@
   "auth": {
     "checking": "Ověřuji přihlášení…",
     "signedOutTitle": "Mezi sezeními",
-    "signedOutText": "Přihlaste se testovacím účtem do pracovního prostoru pro klienta a terapeuta.",
+    "signedOutInviteTitle": "Pozvánka na společný pracovní prostor",
+    "signedOutText": "Přihlaste se jako klient nebo terapeut.",
+    "signedOutInviteText": "Přihlaste se a přijměte pozvánku.",
     "roleSwitchLabel": "Přihlásit se jako",
     "signIn": "Přihlásit se přes Google",
     "signingIn": "Přesměrovávám…",
     "signOut": "Odhlásit se",
     "signInFailed": "Přihlášení se nepodařilo. Zkuste to znovu.",
     "signOutFailed": "Odhlášení se nepodařilo. Zkuste to znovu."
+  },
+  "invitation": {
+    "title": "Pozvání ke spolupráci",
+    "signedInAs": "Přihlášeni jako: {{email}}",
+    "loading": "Načítání pozvání…",
+    "loadFailed": "Nepodařilo se načíst pozvání.",
+    "invalidLink": "Neplatný odkaz na pozvání.",
+    "invitedBy": "{{name}} vás zve do společného pracovního prostoru.",
+    "expiresAt": "Pozvání platí do {{date}}.",
+    "accept": "Přijmout pozvání",
+    "accepting": "Přijímání pozvání…",
+    "acceptFailed": "Nepodařilo se přijmout pozvání."
   },
   "setup": {
     "title": "Připojte Supabase",

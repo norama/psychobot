@@ -5,11 +5,13 @@ import { useAuth } from './db/auth'
 import { db, supabase } from './db/supabase'
 import { useFixedTheme, useThemeCatalog } from './db/theme'
 import './i18n'
+import { InviteScreen } from './screens/InviteScreen'
 import { LoggedInScreen } from './screens/LoggedInScreen'
 import { LoggedOutScreen } from './screens/LoggedOutScreen'
 import { UserMenu } from './screens/UserMenu'
 import './style.css'
 import { Layout } from './ui/Layout'
+import { getInvitationToken, isInvitationRoute } from './util/roleRoute'
 import { getWorkspaceId } from './util/workspaceData'
 
 function AuthenticatedApp() {
@@ -41,12 +43,20 @@ function AuthenticatedApp() {
       }>
       {error && <p role='alert'>{error}</p>}
       {session ? (
-        <LoggedInScreen
-          key={session.user.id}
-          userId={session.user.id}
-          role={role}
-          themes={themes}
-        />
+        isInvitationRoute ? (
+          <InviteScreen
+            key={`${session.user.id}:${session.user.email ?? ''}`}
+            token={getInvitationToken()}
+            userEmail={session.user.email ?? ''}
+          />
+        ) : (
+          <LoggedInScreen
+            key={session.user.id}
+            userId={session.user.id}
+            role={role}
+            themes={themes}
+          />
+        )
       ) : (
         <LoggedOutScreen role={role} busy={busy} onChooseRole={chooseRole} onSignIn={signIn} />
       )}

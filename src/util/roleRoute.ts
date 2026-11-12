@@ -15,11 +15,15 @@ export function storeRole(role: Role) {
 
 export const isInvitationRoute = /^\/invite\/?$/.test(window.location.pathname);
 
-// Only /therapist and /client are valid. Anything else (including /) falls
+export function getInvitationToken(): string | null {
+  return new URLSearchParams(window.location.search).get("token");
+}
+
+// Only /therapist, /client and /invite are valid. Anything else (including /) falls
 // back to the last-used role, so the URL always matches the screen.
 function resolveRole(): Role {
   if (isInvitationRoute) {
-    return getStoredRole() ?? "client";
+    return "client";
   }
 
   const match = /^\/(therapist|client)\/?$/.exec(window.location.pathname);
