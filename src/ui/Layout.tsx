@@ -38,8 +38,7 @@ export function Layout({
   return (
     <HeaderSlotContext.Provider value={{ menus, details }}>
       <div className='min-h-screen bg-brand-50 text-brand-950'>
-        <div
-          className={`mx-auto w-[calc(100%-2rem)] py-8 ${narrow ? 'max-w-[42rem]' : ''}`}>
+        <div className={`mx-auto w-[calc(100%-2rem)] py-8 ${narrow ? 'max-w-[42rem]' : ''}`}>
           <header className='sticky top-0 z-20 mb-4 bg-brand-50 py-4'>
             <div className='flex items-center justify-between gap-4'>
               <a className='font-bold text-brand-900 no-underline' href='/'>

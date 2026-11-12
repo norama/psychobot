@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from './supabase'
 
-export type ThemeCategory = 'signed_out' | 'signed_in' | 'workspace'
+export type ThemeCategory = 'signed_out' | 'signed_in' | 'workspace' | 'invitation'
 export type ThemeRole = 'therapist' | 'client'
 
 export type Theme = {

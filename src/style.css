@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /*
  * Brand ramp: --brand-h / --brand-s drive every brand-* color below.
@@ -30,11 +30,39 @@
   line-height: 1.55;
 }
 
-h1 { margin: 0.45rem 0; font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.2; }
-:focus-visible { outline: 3px solid #3775a8; outline-offset: 3px; }
-.connection { border: 1px solid #ccdcd5; border-radius: 0.75rem; padding: 1rem; margin: 1rem 0 0; }
-dl { margin: 0; }
-dl div + div { margin-top: 0.6rem; }
-dt { color: #3d6358; font-size: 0.875rem; }
-dd { margin: 0; font-weight: 650; }
-[role="alert"] { color: #8b2828; }
+h1 {
+  margin: 0.75rem 0;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.2;
+}
+p + p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+:focus-visible {
+  outline: 3px solid #3775a8;
+  outline-offset: 3px;
+}
+.connection {
+  border: 1px solid #ccdcd5;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin: 1rem 0 0;
+}
+dl {
+  margin: 0;
+}
+dl div + div {
+  margin-top: 0.6rem;
+}
+dt {
+  color: #3d6358;
+  font-size: 0.875rem;
+}
+dd {
+  margin: 0;
+  font-weight: 650;
+}
+[role='alert'] {
+  color: #8b2828;
+}

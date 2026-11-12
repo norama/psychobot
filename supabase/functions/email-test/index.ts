@@ -35,7 +35,7 @@ async function getRecipient(req: Request): Promise<string | null> {
 }
 
 export default {
-  fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
+  fetch: withSupabase({ auth: "user" }, async (req) => {
     if (req.method !== "POST") {
       return Response.json(
         { message: "Použijte metodu POST." },

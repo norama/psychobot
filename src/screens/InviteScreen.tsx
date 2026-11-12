@@ -74,34 +74,36 @@ export function InviteScreen({ token, userEmail }: InviteScreenProps) {
   return (
     <>
       <h1>{t('invitation.title')}</h1>
-      <p>{t('invitation.signedInAs', { email: userEmail })}</p>
+      <div className='mt-6'>
+        <p>{t('invitation.signedInAs', { email: userEmail })}</p>
 
-      {!token ? (
-        <p role='alert'>{t('invitation.invalidLink')}</p>
-      ) : state.status === 'loading' ? (
-        <p role='status'>{t('invitation.loading')}</p>
-      ) : state.status === 'error' ? (
-        <p role='alert'>{state.message}</p>
-      ) : (
-        <>
-          <p>
-            {t('invitation.invitedBy', {
-              name: state.invitation.inviterName,
-            })}
-          </p>
-          <p>
-            {t('invitation.expiresAt', {
-              date: new Date(state.invitation.expiresAt).toLocaleString(
-                i18n.resolvedLanguage ?? 'cs',
-              ),
-            })}
-          </p>
-          <Button disabled={accepting} onClick={handleAccept}>
-            {accepting ? t('invitation.accepting') : t('invitation.accept')}
-          </Button>
-          {acceptError && <p role='alert'>{acceptError}</p>}
-        </>
-      )}
+        {!token ? (
+          <p role='alert'>{t('invitation.invalidLink')}</p>
+        ) : state.status === 'loading' ? (
+          <p role='status'>{t('invitation.loading')}</p>
+        ) : state.status === 'error' ? (
+          <p role='alert'>{state.message}</p>
+        ) : (
+          <>
+            <p>
+              {t('invitation.invitedBy', {
+                name: state.invitation.inviterName,
+              })}
+            </p>
+            <p>
+              {t('invitation.expiresAt', {
+                date: new Date(state.invitation.expiresAt).toLocaleString(
+                  i18n.resolvedLanguage ?? 'cs',
+                ),
+              })}
+            </p>
+            <Button className='mt-6' disabled={accepting} onClick={handleAccept}>
+              {accepting ? t('invitation.accepting') : t('invitation.accept')}
+            </Button>
+            {acceptError && <p role='alert'>{acceptError}</p>}
+          </>
+        )}
+      </div>
     </>
   )
 }

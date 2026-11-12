@@ -23,7 +23,18 @@ function AuthenticatedApp() {
   // in with a specific workspace in the URL). Signed out always wins here,
   // regardless of the URL, since LoggedInScreen never renders in that case —
   // otherwise signing out while viewing a workspace left its theme stuck.
-  useFixedTheme(themes, !session ? 'signed_out' : getWorkspaceId() === null ? 'signed_in' : null)
+  // The invitation route gets its own fixed theme; it must be decided here
+  // (not in InviteScreen) because this effect runs after the child's.
+  useFixedTheme(
+    themes,
+    !session
+      ? 'signed_out'
+      : isInvitationRoute
+        ? 'invitation'
+        : getWorkspaceId() === null
+          ? 'signed_in'
+          : null,
+  )
 
   if (session === undefined)
     return (
