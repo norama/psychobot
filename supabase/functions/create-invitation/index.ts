@@ -5,7 +5,7 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
-import { sendEmail } from "./email.ts";
+import { sendEmail } from "../_shared/email.ts";
 import { createInvitationToken } from "./util.ts";
 
 type InvitationResult = {

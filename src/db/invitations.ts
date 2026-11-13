@@ -1,5 +1,5 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import { db } from "./supabase";
+import { handleError } from "./util";
 
 type CreatedInvitation = {
     message: string;
@@ -8,23 +8,6 @@ type CreatedInvitation = {
     expiresAt: string;
     invitationUrl: string;
 };
-
-async function handleError(error: unknown): Promise<never> {
-    if (error instanceof FunctionsHttpError) {
-        const body: unknown = await error.context.json().catch(() => null);
-
-        if (
-            typeof body === "object" &&
-            body !== null &&
-            "message" in body &&
-            typeof body.message === "string"
-        ) {
-            throw new Error(body.message);
-        }
-    }
-
-    throw error;
-}
 
 export async function createInvitation(
     recipient: string,
