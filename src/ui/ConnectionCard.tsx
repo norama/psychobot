@@ -1,5 +1,5 @@
-import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { AppLink } from './AppLink'
 
 export function ConnectionCard({
   roleLabel,
@@ -28,9 +28,9 @@ export function ConnectionCard({
         </div>
       </dl>
       {openHref && (
-        <Link className='mt-4 inline-block text-brand-700 underline' to={openHref}>
+        <AppLink className='mt-4 inline-block' to={openHref}>
           {t('connections.openWorkspace')}
-        </Link>
+        </AppLink>
       )}
     </section>
   )

@@ -1,3 +1,4 @@
+import { AppLink } from '@/ui/AppLink'
 import { Button } from '@/ui/Button'
 import { Menu } from '@/ui/Menu'
 import type { Role } from '@/util/roleRoute'
@@ -41,6 +42,14 @@ export function UserMenu({ db, userId, role, busy, onSignOut }: UserMenuProps) {
           {t('connections.yourRole')}: {t(`connections.roles.${role}`)}
         </p>
       </div>
+      <AppLink
+        to={`/${role}`}
+        onClick={(event) => {
+          event.currentTarget.closest('details')?.removeAttribute('open')
+        }}
+        className='text-sm font-medium mb-4'>
+        {t('workspace.backToOverview')}
+      </AppLink>
       <Button variant='secondary' disabled={busy} onClick={onSignOut}>
         {t('auth.signOut')}
       </Button>
