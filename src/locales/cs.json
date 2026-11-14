@@ -69,6 +69,10 @@
     "infoMenu": "Informace",
     "messagesComingSoon": "Zprávy přidáme v další verzi."
   },
+  "topics": {
+    "title": "Témata",
+    "selectPrompt": "Vyberte téma ze seznamu nebo vytvořte nové."
+  },
   "user": {
     "menuLabel": "Účet"
   },

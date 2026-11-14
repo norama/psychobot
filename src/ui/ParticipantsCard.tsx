@@ -16,7 +16,7 @@ export function ParticipantsCard({
     { role: 'client', label: t('connections.roles.client'), name: clientName },
   ]
   return (
-    <section className='flex flex-wrap gap-2 text-sm'>
+    <section className='flex flex-wrap gap-2 text-sm items-center'>
       {participants.map(({ role, label, name }) => {
         const isCurrent = role === currentRole
         return (
@@ -34,6 +34,7 @@ export function ParticipantsCard({
           </div>
         )
       })}
+      <p className='ml-2 text-sm font-semibold text-brand-700'>{t('workspace.title')}</p>
     </section>
   )
 }

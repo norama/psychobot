@@ -1,8 +1,8 @@
-import { Link } from 'react-router'
 import type { ReactNode } from 'react'
 import { createContext, useContext, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
 type HeaderSlots = { menus: HTMLElement | null; details: HTMLElement | null }
 
@@ -53,10 +53,10 @@ export function Layout({
             </div>
             <div ref={setDetails} className='mt-3' />
           </header>
-          <main className='rounded-2xl border border-brand-200 bg-white p-6 sm:p-10'>
-            <p className='m-0 text-sm font-semibold text-brand-700'>
-              {t('layout.testEnvironment')}
-            </p>
+          <main
+            className={`overflow-hidden rounded-2xl border border-brand-200 bg-white ${
+              narrow ? 'p-6 sm:p-10' : ''
+            }`}>
             {children}
           </main>
         </div>

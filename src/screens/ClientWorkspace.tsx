@@ -1,3 +1,4 @@
+import { WorkspaceTopics } from '@/components/WorkspaceTopics'
 import type { useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
 import { ConnectionCard } from '@/ui/ConnectionCard'
 import { HeaderDetails, HeaderMenus } from '@/ui/Layout'
@@ -25,7 +26,6 @@ export function ClientWorkspace({ workspace, themes, themeId, onChoose }: Client
           currentRole='client'
         />
       </HeaderDetails>
-      <h1 className='mb-4'>{t('workspace.title')}</h1>
       <HeaderMenus>
         <Menu label={t('workspace.infoMenu')}>
           <ConnectionCard
@@ -40,7 +40,7 @@ export function ClientWorkspace({ workspace, themes, themeId, onChoose }: Client
           </Menu>
         )}
       </HeaderMenus>
-      <p>{t('workspace.messagesComingSoon')}</p>
+      <WorkspaceTopics />
     </>
   )
 }
