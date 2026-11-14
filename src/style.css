@@ -40,8 +40,14 @@ p + p {
   margin-bottom: 0.75rem;
 }
 :focus-visible {
-  outline: 3px solid #3775a8;
-  outline-offset: 3px;
+  outline: 2px solid var(--color-brand-700);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  border-color: var(--color-brand-700);
+  outline-offset: 0;
 }
 .connection {
   border: 1px solid #ccdcd5;

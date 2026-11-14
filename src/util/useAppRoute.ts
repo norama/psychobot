@@ -21,17 +21,6 @@ export function useAppRoute(role: Role, isInvitationRoute: boolean) {
     }, { replace: true });
   }
 
-  function chooseTopic(topicId: string) {
-    const nextParams = new URLSearchParams(location.search);
-    nextParams.set("topic", topicId);
-
-    navigate({
-      pathname: location.pathname,
-      search: `?${nextParams.toString()}`,
-      hash: location.hash,
-    });
-  }
-
   return {
     location,
     navigate,
@@ -40,7 +29,5 @@ export function useAppRoute(role: Role, isInvitationRoute: boolean) {
     isInvitationRoute,
     workspaceId: searchParams.get("workspace"),
     invitationToken: searchParams.get("token"),
-    topicId: searchParams.get("topic"),
-    chooseTopic,
   };
 }

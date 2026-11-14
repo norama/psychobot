@@ -2,8 +2,8 @@
   "app": {
     "name": "PsychoBot"
   },
-  "layout": {
-    "testEnvironment": "Testovací prostředí"
+  "common": {
+    "close": "Zavřít"
   },
   "auth": {
     "checking": "Ověřuji přihlášení…",
@@ -71,7 +71,18 @@
   },
   "topics": {
     "title": "Témata",
-    "selectPrompt": "Vyberte téma ze seznamu nebo vytvořte nové."
+    "selectPrompt": "Vyberte téma ze seznamu nebo vytvořte nové.",
+    "loading": "Načítám témata…",
+    "loadFailed": "Témata se nepodařilo načíst. Zkuste obnovit stránku.",
+    "empty": "Zatím žádná témata.",
+    "new": "Nové téma",
+    "titleLabel": "Název tématu",
+    "descriptionLabel": "Popis (nepovinný, sdílený)",
+    "descriptionHint": "Popis uvidí oba účastníci. Soukromé poznámky sem nepatří.",
+    "titleRequired": "Zadejte název tématu.",
+    "create": "Vytvořit téma",
+    "creating": "Vytvářím…",
+    "createFailed": "Téma se nepodařilo vytvořit. Zkuste to znovu."
   },
   "user": {
     "menuLabel": "Účet"

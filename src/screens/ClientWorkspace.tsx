@@ -40,7 +40,7 @@ export function ClientWorkspace({ workspace, themes, themeId, onChoose }: Client
           </Menu>
         )}
       </HeaderMenus>
-      <WorkspaceTopics />
+      <WorkspaceTopics workspaceId={workspace.id} />
     </>
   )
 }

@@ -45,7 +45,7 @@ export function TherapistWorkspace({
           </Menu>
         )}
       </HeaderMenus>
-      <WorkspaceTopics />
+      <WorkspaceTopics workspaceId={workspace.id} />
     </>
   )
 }
