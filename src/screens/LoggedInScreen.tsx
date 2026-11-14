@@ -9,8 +9,8 @@ import { ConnectionSection } from '@/ui/ConnectionSection'
 import type { Role } from '@/util/roleRoute'
 import { clearStoredWorkspace, storeWorkspace } from '@/util/workspaceData'
 import { useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { Link, useLocation, useNavigate } from 'react-router'
 
 type LoggedInScreenProps = {
   userId: string
@@ -21,7 +21,11 @@ type LoggedInScreenProps = {
 }
 
 export function LoggedInScreen({
-  userId, role, workspaceId, themes, onWorkspaceUnavailable,
+  userId,
+  role,
+  workspaceId,
+  themes,
+  onWorkspaceUnavailable,
 }: LoggedInScreenProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -69,7 +73,10 @@ export function LoggedInScreen({
     : null
   useEffect(() => {
     if (dataRole === null || dataRole === role || workspaceId === null) return
-    navigate({ pathname: `/${dataRole}`, search: location.search, hash: location.hash }, { replace: true })
+    navigate(
+      { pathname: `/${dataRole}`, search: location.search, hash: location.hash },
+      { replace: true },
+    )
   }, [dataRole, role, workspaceId, navigate, location.search, location.hash])
 
   if (state.status === 'loading') return <p role='status'>{t('workspace.loading')}</p>
@@ -113,13 +120,13 @@ export function LoggedInScreen({
 
   if (state.rows.length === 0) {
     return (
-      <>
+      <div className='p-6 sm:p-10'>
         <h1>{t('workspace.unavailableTitle')}</h1>
         <p>{t('workspace.unavailableText')}</p>
         <Link className='text-brand-700 underline' to={`/${role}`}>
           {t('workspace.backToOverview')}
         </Link>
-      </>
+      </div>
     )
   }
 

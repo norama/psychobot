@@ -57,7 +57,10 @@
     "recipientEmail": "E-mail klienta:",
     "invitationCreated": "Pozvání vytvořeno. Zkopírujte si odkaz:",
     "invitationFailed": "Nepodařilo se vytvořit pozvání.",
-    "functionTestFailed": "Test funkce se nezdařil."
+    "functionTestFailed": "Test funkce se nezdařil.",
+    "createInvitation": "Vytvořit pozvání",
+    "creatingInvitation": "Vytvářím pozvání…",
+    "invitationLink": "Odkaz na pozvání"
   },
   "workspace": {
     "loading": "Načítám pracovní prostor…",
