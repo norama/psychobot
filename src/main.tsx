@@ -1,5 +1,5 @@
 import { StrictMode, useCallback, useEffect, useRef, useState } from 'react'
-import { BrowserRouter, Navigate } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router'
 import { createRoot } from 'react-dom/client'
 import { Trans, useTranslation } from 'react-i18next'
 import { useAuth } from './db/auth'
@@ -13,11 +13,15 @@ import { UserMenu } from './screens/UserMenu'
 import './style.css'
 import { Layout } from './ui/Layout'
 import { useAppRoute } from './util/useAppRoute'
+import { getStoredRole, type Role } from './util/roleRoute'
+import { getStoredWorkspace } from './util/workspaceData'
 import { hasOAuthCallback, withoutOAuthCallback } from './util/oauthCallback'
 
-function AuthenticatedApp() {
+type AppRouteProps = { role: Role; isInvitationRoute?: boolean }
+
+function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
   const { t } = useTranslation()
-  const { role, chooseRole, isInvitationRoute, workspaceId, invitationToken, location, navigate } = useAppRoute()
+  const { chooseRole, workspaceId, invitationToken, location, navigate } = useAppRoute(role, isInvitationRoute)
   const [callbackExpected] = useState(() => hasOAuthCallback(location))
   const { session, initialized, busy, error, signIn, signOut } = useAuth(callbackExpected)
   const callbackHandled = useRef(false)
@@ -118,11 +122,9 @@ function AuthenticatedApp() {
   )
 }
 
-function App() {
+function App(props: AppRouteProps) {
   const { t } = useTranslation()
-  const { fallback } = useAppRoute()
-  if (fallback) return <Navigate to={fallback} replace />
-  if (supabase) return <AuthenticatedApp />
+  if (supabase) return <AuthenticatedApp {...props} />
   return (
     <Layout>
       <h1>{t('setup.title')}</h1>
@@ -133,10 +135,27 @@ function App() {
   )
 }
 
+function RememberedDestination({ restoreWorkspace = false }: { restoreWorkspace?: boolean }) {
+  const { search, hash } = useLocation()
+  // Only the root route with no search restores a workspace. Explicit links
+  // and unknown paths retain their query parameters and use the remembered role.
+  const workspace = restoreWorkspace && !search ? getStoredWorkspace() : null
+  const destination = workspace
+    ? `/${workspace.role}?workspace=${workspace.id}`
+    : `/${getStoredRole() ?? 'client'}${search}`
+  return <Navigate to={destination + hash} replace />
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <Routes>
+        <Route path='/' element={<RememberedDestination restoreWorkspace />} />
+        <Route path='/client' caseSensitive element={<App role='client' />} />
+        <Route path='/therapist' caseSensitive element={<App role='therapist' />} />
+        <Route path='/invite' caseSensitive element={<App role='client' isInvitationRoute />} />
+        <Route path='*' element={<RememberedDestination />} />
+      </Routes>
     </BrowserRouter>
   </StrictMode>,
 )
