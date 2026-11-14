@@ -1,6 +1,7 @@
 import { acceptInvitation, getInvitation, type InvitationDetails } from '@/db/invitations'
 import { Button } from '@/ui/Button'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 type InviteScreenProps = {
@@ -14,6 +15,7 @@ type InvitationState =
   | { status: 'error'; message: string }
 
 export function InviteScreen({ token, userEmail }: InviteScreenProps) {
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const [state, setState] = useState<InvitationState>({ status: 'loading' })
   const [accepting, setAccepting] = useState(false)
@@ -64,7 +66,7 @@ export function InviteScreen({ token, userEmail }: InviteScreenProps) {
         throw new Error(t('invitation.acceptFailed'))
       }
 
-      window.location.assign(`/client?workspace=${encodeURIComponent(workspaceId)}`)
+      navigate(`/client?workspace=${encodeURIComponent(workspaceId)}`)
     } catch (error) {
       setAcceptError(error instanceof Error ? error.message : t('invitation.acceptFailed'))
       setAccepting(false)

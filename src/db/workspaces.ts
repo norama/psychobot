@@ -1,11 +1,10 @@
 import type { Role } from "@/util/roleRoute";
 import type { Workspace, WorkspacesState } from "@/util/workspaceData";
-import { getWorkspaceId, validWorkspaceId } from "@/util/workspaceData";
+import { validWorkspaceId } from "@/util/workspaceData";
 import { useEffect, useState } from "react";
 import { db } from "./supabase";
 
-export function useWorkspaces(userId: string, role: Role) {
-  const workspaceId = getWorkspaceId();
+export function useWorkspaces(userId: string, role: Role, workspaceId: string | null) {
   const [state, setState] = useState<WorkspacesState>({ status: "loading" });
 
   useEffect(() => {

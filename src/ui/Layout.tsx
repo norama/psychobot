@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import type { ReactNode } from 'react'
 import { createContext, useContext, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -41,10 +42,10 @@ export function Layout({
         <div className={`mx-auto w-[calc(100%-2rem)] py-8 ${narrow ? 'max-w-[42rem]' : ''}`}>
           <header className='sticky top-0 z-20 mb-4 bg-brand-50 py-4'>
             <div className='flex items-center justify-between gap-4'>
-              <a className='font-bold text-brand-900 no-underline' href='/'>
+              <Link className='font-bold text-brand-900 no-underline' to='/'>
                 {t('app.name')}
                 {roleLabel && ` - ${roleLabel}`}
-              </a>
+              </Link>
               <div className='ml-auto flex items-center gap-2'>
                 <div ref={setMenus} className='flex items-center gap-2' />
                 {actions}
