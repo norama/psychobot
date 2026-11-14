@@ -15,7 +15,8 @@
     "prettier": "^3.9.10",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-i18next": "^17.1.13"
+    "react-i18next": "^17.1.13",
+    "react-router": "8.5.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

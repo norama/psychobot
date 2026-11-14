@@ -1,70 +1,49 @@
-import type { Role } from "@/util/roleRoute";
-import { currentRole, isInvitationRoute, storeRole } from "@/util/roleRoute";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { db } from "./supabase";
 
-const authResponse = new URL(window.location.href);
-const callbackError = authResponse.searchParams.has("error") ||
-  new URLSearchParams(authResponse.hash.slice(1)).has("error");
-const callbackCode = authResponse.searchParams.has("code");
-
-function useRole() {
-  const [role, setRole] = useState<Role>(currentRole);
-
-  function chooseRole(next: Role) {
-    storeRole(next);
-    window.history.replaceState(null, "", `/${next}${window.location.search}`);
-    setRole(next);
-  }
-
-  return { role, chooseRole };
-}
-
-export function useAuth() {
+export function useAuth(callbackExpected = false) {
   const { t } = useTranslation();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const { role, chooseRole } = useRole();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const {
       data: { subscription },
     } = db.auth.onAuthStateChange((event, nextSession) => {
-      if (
-        event === "INITIAL_SESSION" && !nextSession &&
-        (callbackError || callbackCode)
-      ) {
+      if (!active) return;
+      if (event === "INITIAL_SESSION" && !nextSession && callbackExpected) {
         setError(t("auth.signInFailed"));
-
-        const token = new URLSearchParams(window.location.search).get("token");
-
-        const cleanSearch = isInvitationRoute && token
-          ? `?token=${encodeURIComponent(token)}`
-          : "";
-
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + cleanSearch,
-        );
       }
       setSession(nextSession);
     });
-    return () => subscription.unsubscribe();
-  }, [db, t]);
 
-  async function signIn() {
+    // Reuse the client's initialization promise; do not exchange the PKCE code
+    // again. INITIAL_SESSION alone does not expose callback-processing errors.
+    void db.auth.initialize().then(({ error: initializationError }) => {
+      if (!active) return;
+      if (initializationError) setError(t("auth.signInFailed"));
+      setInitialized(true);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [callbackExpected, t]);
+
+  async function signIn(redirectTo: string) {
     setBusy(true);
     setError("");
     try {
       const { error: signInError } = await db.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin + window.location.pathname +
-            window.location.search,
+          redirectTo,
           queryParams: { prompt: "select_account" },
         },
       });
@@ -81,14 +60,13 @@ export function useAuth() {
     try {
       const { error: signOutError } = await db.auth.signOut({ scope: "local" });
       if (signOutError) throw signOutError;
-      if (!isInvitationRoute) {
-        window.history.replaceState(null, "", `/${role}`);
-      }
+      return true;
     } catch {
       setError(t("auth.signOutFailed"));
+      return false;
     } finally {
       setBusy(false);
     }
   }
-  return { session, busy, error, signIn, signOut, role, chooseRole };
+  return { session, initialized, busy, error, signIn, signOut };
 }

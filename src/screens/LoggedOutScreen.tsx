@@ -1,16 +1,22 @@
 import { Button } from '@/ui/Button'
 import type { Role } from '@/util/roleRoute'
-import { isInvitationRoute } from '@/util/roleRoute'
 import { useTranslation } from 'react-i18next'
 
 type LoggedOutScreenProps = {
   role: Role
+  isInvitationRoute: boolean
   busy: boolean
   onChooseRole: (role: Role) => void
   onSignIn: () => void
 }
 
-export function LoggedOutScreen({ role, busy, onChooseRole, onSignIn }: LoggedOutScreenProps) {
+export function LoggedOutScreen({
+  role,
+  isInvitationRoute,
+  busy,
+  onChooseRole,
+  onSignIn,
+}: LoggedOutScreenProps) {
   const { t } = useTranslation()
   return (
     <>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 export function ConnectionCard({
@@ -27,9 +28,9 @@ export function ConnectionCard({
         </div>
       </dl>
       {openHref && (
-        <a className='mt-4 inline-block text-brand-700 underline' href={openHref}>
+        <Link className='mt-4 inline-block text-brand-700 underline' to={openHref}>
           {t('connections.openWorkspace')}
-        </a>
+        </Link>
       )}
     </section>
   )

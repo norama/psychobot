@@ -1,4 +1,5 @@
-import { StrictMode } from 'react'
+import { StrictMode, useCallback, useEffect, useRef, useState } from 'react'
+import { BrowserRouter, Navigate } from 'react-router'
 import { createRoot } from 'react-dom/client'
 import { Trans, useTranslation } from 'react-i18next'
 import { useAuth } from './db/auth'
@@ -11,12 +12,46 @@ import { LoggedOutScreen } from './screens/LoggedOutScreen'
 import { UserMenu } from './screens/UserMenu'
 import './style.css'
 import { Layout } from './ui/Layout'
-import { getInvitationToken, isInvitationRoute } from './util/roleRoute'
-import { getWorkspaceId } from './util/workspaceData'
+import { useAppRoute } from './util/useAppRoute'
+import { hasOAuthCallback, withoutOAuthCallback } from './util/oauthCallback'
 
 function AuthenticatedApp() {
   const { t } = useTranslation()
-  const { session, busy, error, signIn, signOut, role, chooseRole } = useAuth()
+  const { role, chooseRole, isInvitationRoute, workspaceId, invitationToken, location, navigate } = useAppRoute()
+  const [callbackExpected] = useState(() => hasOAuthCallback(location))
+  const { session, initialized, busy, error, signIn, signOut } = useAuth(callbackExpected)
+  const callbackHandled = useRef(false)
+  const [unavailableWorkspace, setUnavailableWorkspace] = useState<string | null>(null)
+  const workspaceKey = session && workspaceId !== null ? `${session.user.id}:${workspaceId}` : null
+  const handleWorkspaceUnavailable = useCallback((unavailable: boolean) => {
+    setUnavailableWorkspace(unavailable ? workspaceKey : null)
+  }, [workspaceKey])
+
+  useEffect(() => {
+    if (!initialized || session === undefined || callbackHandled.current) return
+    callbackHandled.current = true
+    const clean = withoutOAuthCallback(location)
+    // Supabase may already have removed code through history.replaceState;
+    // navigating also synchronizes React Router's location with the browser.
+    if (clean.search !== location.search || clean.hash !== location.hash) {
+      navigate({ pathname: location.pathname, ...clean }, { replace: true })
+    }
+  }, [initialized, session, location, navigate])
+
+  function handleSignIn() {
+    const clean = withoutOAuthCallback(location)
+    void signIn(window.location.origin + location.pathname + clean.search)
+  }
+
+  async function handleSignOut() {
+    // Keep an unavailable link for account switching; ordinary logout returns
+    // to the overview. Scope the result to the current account and workspace.
+    const keepDestination = isInvitationRoute ||
+      (workspaceKey !== null && unavailableWorkspace === workspaceKey)
+    const signedOut = await signOut()
+    if (signedOut && !keepDestination) navigate(`/${role}`, { replace: true })
+  }
+
   const themes = useThemeCatalog()
 
   // LoggedInScreen owns theming, but only while it's actually mounted (signed
@@ -31,12 +66,12 @@ function AuthenticatedApp() {
       ? 'signed_out'
       : isInvitationRoute
         ? 'invitation'
-        : getWorkspaceId() === null
+        : workspaceId === null
           ? 'signed_in'
           : null,
   )
 
-  if (session === undefined)
+  if (!initialized || session === undefined)
     return (
       <Layout>
         <p role='status'>{t('auth.checking')}</p>
@@ -46,30 +81,38 @@ function AuthenticatedApp() {
   return (
     <Layout
       roleLabel={session ? t(`connections.roles.${role}`) : undefined}
-      narrow={!session || getWorkspaceId() === null}
+      narrow={!session || workspaceId === null}
       actions={
         session && (
-          <UserMenu db={db} userId={session.user.id} role={role} busy={busy} onSignOut={signOut} />
+          <UserMenu db={db} userId={session.user.id} role={role} busy={busy} onSignOut={handleSignOut} />
         )
       }>
       {error && <p role='alert'>{error}</p>}
       {session ? (
         isInvitationRoute ? (
           <InviteScreen
-            key={`${session.user.id}:${session.user.email ?? ''}`}
-            token={getInvitationToken()}
+            key={`${session.user.id}:${session.user.email ?? ''}:${invitationToken}`}
+            token={invitationToken}
             userEmail={session.user.email ?? ''}
           />
         ) : (
           <LoggedInScreen
-            key={session.user.id}
+            key={`${session.user.id}:${role}:${workspaceId}`}
             userId={session.user.id}
             role={role}
+            workspaceId={workspaceId}
+            onWorkspaceUnavailable={handleWorkspaceUnavailable}
             themes={themes}
           />
         )
       ) : (
-        <LoggedOutScreen role={role} busy={busy} onChooseRole={chooseRole} onSignIn={signIn} />
+        <LoggedOutScreen
+          role={role}
+          busy={busy}
+          isInvitationRoute={isInvitationRoute}
+          onChooseRole={chooseRole}
+          onSignIn={handleSignIn}
+        />
       )}
     </Layout>
   )
@@ -77,6 +120,8 @@ function AuthenticatedApp() {
 
 function App() {
   const { t } = useTranslation()
+  const { fallback } = useAppRoute()
+  if (fallback) return <Navigate to={fallback} replace />
   if (supabase) return <AuthenticatedApp />
   return (
     <Layout>
@@ -90,6 +135,8 @@ function App() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </StrictMode>,
 )

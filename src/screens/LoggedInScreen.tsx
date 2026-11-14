@@ -9,17 +9,30 @@ import { ConnectionSection } from '@/ui/ConnectionSection'
 import type { Role } from '@/util/roleRoute'
 import { clearStoredWorkspace, storeWorkspace } from '@/util/workspaceData'
 import { useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 type LoggedInScreenProps = {
   userId: string
   role: Role
+  workspaceId: string | null
+  onWorkspaceUnavailable: (unavailable: boolean) => void
   themes: ReturnType<typeof useThemeCatalog>
 }
 
-export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
+export function LoggedInScreen({
+  userId, role, workspaceId, themes, onWorkspaceUnavailable,
+}: LoggedInScreenProps) {
   const { t } = useTranslation()
-  const { state, singleWorkspace, workspaceId } = useWorkspaces(userId, role)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { state, singleWorkspace } = useWorkspaces(userId, role, workspaceId)
+
+  useEffect(() => {
+    onWorkspaceUnavailable(
+      state.status === 'ready' && workspaceId !== null && state.rows.length === 0,
+    )
+  }, [state, workspaceId, onWorkspaceUnavailable])
 
   const themeRole: ThemeRole = singleWorkspace?.therapist_id === userId ? 'therapist' : 'client'
   const { themeId, choose } = useWorkspaceTheme(
@@ -48,7 +61,7 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
   }, [state, workspaceId, userId])
 
   // The workspace's real role comes from the data. If the URL names the other
-  // role (e.g. typed by hand), reload on the matching path instead.
+  // role (e.g. typed by hand), replace it with the matching path.
   const dataRole: Role | null = singleWorkspace
     ? singleWorkspace.therapist_id === userId
       ? 'therapist'
@@ -56,8 +69,8 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
     : null
   useEffect(() => {
     if (dataRole === null || dataRole === role || workspaceId === null) return
-    window.location.replace(`/${dataRole}?workspace=${workspaceId}`)
-  }, [dataRole, role, workspaceId])
+    navigate({ pathname: `/${dataRole}`, search: location.search, hash: location.hash }, { replace: true })
+  }, [dataRole, role, workspaceId, navigate, location.search, location.hash])
 
   if (state.status === 'loading') return <p role='status'>{t('workspace.loading')}</p>
   if (state.status === 'error') {
@@ -103,9 +116,9 @@ export function LoggedInScreen({ userId, role, themes }: LoggedInScreenProps) {
       <>
         <h1>{t('workspace.unavailableTitle')}</h1>
         <p>{t('workspace.unavailableText')}</p>
-        <a className='text-brand-700 underline' href={`/${role}`}>
+        <Link className='text-brand-700 underline' to={`/${role}`}>
           {t('workspace.backToOverview')}
-        </a>
+        </Link>
       </>
     )
   }
