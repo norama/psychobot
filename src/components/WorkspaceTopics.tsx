@@ -1,15 +1,24 @@
 import { Button } from '@/ui/Button'
+import { storeTopic } from '@/util/topicPreference'
 import { useTopicRoute } from '@/util/useTopicRoute'
 import { useTopics } from '@/util/useTopics'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NewTopicDialog } from './NewTopicDialog'
 
 export function WorkspaceTopics({ workspaceId }: { workspaceId: string }) {
   const { t, i18n } = useTranslation()
-  const { chooseTopic } = useTopicRoute()
+  const { topicId, chooseTopic } = useTopicRoute()
   const [creating, setCreating] = useState(false)
   const { state, reload } = useTopics(workspaceId)
+
+  const selectedTopic =
+    state.status === 'ready' ? state.topics.find((topic) => topic.id === topicId) : undefined
+
+  useEffect(() => {
+    if (state.status !== 'ready') return
+    storeTopic(workspaceId, selectedTopic?.id ?? null)
+  }, [workspaceId, state.status, selectedTopic?.id])
 
   const dateFormatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
     dateStyle: 'short',
@@ -45,20 +54,53 @@ export function WorkspaceTopics({ workspaceId }: { workspaceId: string }) {
           ) : (
             <ul className='mt-4 space-y-2'>
               {state.topics.map((topic) => (
-                <li key={topic.id} className='rounded-lg px-3 py-2'>
-                  <p className='break-words font-medium'>{topic.title}</p>
-                  <time dateTime={topic.created_at} className='block text-xs text-brand-700'>
-                    {dateFormatter.format(new Date(topic.created_at))}
-                  </time>
+                <li key={topic.id}>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      if (topic.id !== topicId) chooseTopic(topic.id)
+                    }}
+                    aria-current={topic.id === topicId ? 'true' : undefined}
+                    className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left hover:bg-brand-100 ${
+                      topic.id === topicId ? 'bg-brand-100 font-semibold' : ''
+                    }`}>
+                    <span className='block break-words'>{topic.title}</span>
+                    <time
+                      dateTime={topic.created_at}
+                      className='block text-xs font-normal text-brand-700'>
+                      {dateFormatter.format(new Date(topic.created_at))}
+                    </time>
+                  </button>
                 </li>
               ))}
             </ul>
           ))}
       </aside>
 
-      <section className='min-w-0 p-4'>
-        <p className='text-brand-700'>{t('topics.selectPrompt')}</p>
+      <section className='min-w-0 p-6'>
+        {state.status === 'loading' ? (
+          <p role='status'>{t('topics.loading')}</p>
+        ) : state.status === 'error' ? (
+          <p role='alert'>{t('topics.loadFailed')}</p>
+        ) : topicId === null ? (
+          <p className='text-brand-700'>{t('topics.selectPrompt')}</p>
+        ) : !selectedTopic ? (
+          <p role='alert'>{t('topics.unavailable')}</p>
+        ) : (
+          <>
+            <h2 className='break-words text-xl font-semibold'>{selectedTopic.title}</h2>
+
+            {selectedTopic.description && (
+              <p className='mt-3 whitespace-pre-wrap break-words text-brand-800'>
+                {selectedTopic.description}
+              </p>
+            )}
+
+            <p className='mt-6 text-brand-700'>{t('topics.contentComingSoon')}</p>
+          </>
+        )}
       </section>
+
       {creating && (
         <NewTopicDialog
           workspaceId={workspaceId}

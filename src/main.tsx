@@ -1,7 +1,7 @@
 import { StrictMode, useCallback, useEffect, useRef, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router'
 import { createRoot } from 'react-dom/client'
 import { Trans, useTranslation } from 'react-i18next'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router'
 import { useAuth } from './db/auth'
 import { db, supabase } from './db/supabase'
 import { useFixedTheme, useThemeCatalog } from './db/theme'
@@ -12,24 +12,31 @@ import { LoggedOutScreen } from './screens/LoggedOutScreen'
 import { UserMenu } from './screens/UserMenu'
 import './style.css'
 import { Layout } from './ui/Layout'
-import { useAppRoute } from './util/useAppRoute'
-import { getStoredRole, type Role } from './util/roleRoute'
-import { getStoredWorkspace } from './util/workspaceData'
 import { hasOAuthCallback, withoutOAuthCallback } from './util/oauthCallback'
+import { getStoredRole, type Role } from './util/roleRoute'
+import { getStoredTopic } from './util/topicPreference'
+import { useAppRoute } from './util/useAppRoute'
+import { getStoredWorkspace } from './util/workspaceData'
 
 type AppRouteProps = { role: Role; isInvitationRoute?: boolean }
 
 function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
   const { t } = useTranslation()
-  const { chooseRole, workspaceId, invitationToken, location, navigate } = useAppRoute(role, isInvitationRoute)
+  const { chooseRole, workspaceId, invitationToken, location, navigate } = useAppRoute(
+    role,
+    isInvitationRoute,
+  )
   const [callbackExpected] = useState(() => hasOAuthCallback(location))
   const { session, initialized, busy, error, signIn, signOut } = useAuth(callbackExpected)
   const callbackHandled = useRef(false)
   const [unavailableWorkspace, setUnavailableWorkspace] = useState<string | null>(null)
   const workspaceKey = session && workspaceId !== null ? `${session.user.id}:${workspaceId}` : null
-  const handleWorkspaceUnavailable = useCallback((unavailable: boolean) => {
-    setUnavailableWorkspace(unavailable ? workspaceKey : null)
-  }, [workspaceKey])
+  const handleWorkspaceUnavailable = useCallback(
+    (unavailable: boolean) => {
+      setUnavailableWorkspace(unavailable ? workspaceKey : null)
+    },
+    [workspaceKey],
+  )
 
   useEffect(() => {
     if (!initialized || session === undefined || callbackHandled.current) return
@@ -50,8 +57,8 @@ function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
   async function handleSignOut() {
     // Keep an unavailable link for account switching; ordinary logout returns
     // to the overview. Scope the result to the current account and workspace.
-    const keepDestination = isInvitationRoute ||
-      (workspaceKey !== null && unavailableWorkspace === workspaceKey)
+    const keepDestination =
+      isInvitationRoute || (workspaceKey !== null && unavailableWorkspace === workspaceKey)
     const signedOut = await signOut()
     if (signedOut && !keepDestination) navigate(`/${role}`, { replace: true })
   }
@@ -88,7 +95,13 @@ function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
       narrow={!session || workspaceId === null}
       actions={
         session && (
-          <UserMenu db={db} userId={session.user.id} role={role} busy={busy} onSignOut={handleSignOut} />
+          <UserMenu
+            db={db}
+            userId={session.user.id}
+            role={role}
+            busy={busy}
+            onSignOut={handleSignOut}
+          />
         )
       }>
       {error && <p role='alert'>{error}</p>}
@@ -140,9 +153,20 @@ function RememberedDestination({ restoreWorkspace = false }: { restoreWorkspace?
   // Only the root route with no search restores a workspace. Explicit links
   // and unknown paths retain their query parameters and use the remembered role.
   const workspace = restoreWorkspace && !search ? getStoredWorkspace() : null
+
+  const params = new URLSearchParams()
+
+  if (workspace) {
+    params.set('workspace', workspace.id)
+
+    const topicId = getStoredTopic(workspace.id)
+    if (topicId) params.set('topic', topicId)
+  }
+
   const destination = workspace
-    ? `/${workspace.role}?workspace=${workspace.id}`
+    ? `/${workspace.role}?${params.toString()}`
     : `/${getStoredRole() ?? 'client'}${search}`
+
   return <Navigate to={destination + hash} replace />
 }
 

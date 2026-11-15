@@ -85,7 +85,9 @@
     "titleRequired": "Zadejte název tématu.",
     "create": "Vytvořit téma",
     "creating": "Vytvářím…",
-    "createFailed": "Téma se nepodařilo vytvořit. Zkuste to znovu."
+    "createFailed": "Téma se nepodařilo vytvořit. Zkuste to znovu.",
+    "unavailable": "Téma není dostupné v tomto pracovním prostoru.",
+    "contentComingSoon": "Přípravu a zprávy k tématu přidáme v dalším kroku."
   },
   "user": {
     "menuLabel": "Účet"
