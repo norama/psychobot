@@ -1,4 +1,6 @@
 import { createTopicMessage, getTopicMessages, type TopicMessage } from '@/db/topicMessages'
+import { getStoredMessage, storeMessage } from '@/util/messagePreference'
+import { useMessageRoute } from '@/util/useMessageRoute'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PreparationEntryComposer } from './PreparationEntryComposer'
@@ -27,6 +29,11 @@ async function loadPreparationEntries(
 
 export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
   const { t, i18n } = useTranslation()
+  const { messageId, chooseMessage } = useMessageRoute()
+  const [lastSavedMessage, setLastSavedMessage] = useState<{
+    id: string
+    preparationId: string
+  } | null>(null)
   const [state, setState] = useState<EntriesState>({ status: 'loading' })
   const [preparationId, setPreparationId] = useState<string>(() => crypto.randomUUID())
   const [saved, setSaved] = useState(false)
@@ -36,6 +43,7 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
   })
   const [refreshFailed, setRefreshFailed] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
+  const selectionRestoredRef = useRef(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -65,9 +73,54 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     return () => controller.abort()
   }, [topicId, userId])
 
+  const selectedEntry =
+    state.status === 'ready' ? state.entries.find((entry) => entry.id === messageId) : undefined
+
+  const selectedPreparationId =
+    selectedEntry?.preparation_id ??
+    (lastSavedMessage?.id === messageId ? lastSavedMessage.preparationId : preparationId)
+
+  const messageUnavailable =
+    state.status === 'ready' &&
+    messageId !== null &&
+    !selectedEntry &&
+    lastSavedMessage?.id !== messageId
+
+  useEffect(() => {
+    if (state.status !== 'ready' || selectionRestoredRef.current) return
+    selectionRestoredRef.current = true
+
+    // Explicit URL selection always wins.
+    if (messageId !== null) return
+
+    const storedMessageId = getStoredMessage(userId, topicId)
+    if (storedMessageId === null) return
+
+    if (state.entries.some((entry) => entry.id === storedMessageId)) {
+      chooseMessage(storedMessageId, { replace: true })
+    } else {
+      storeMessage(userId, topicId, null)
+    }
+  }, [state, messageId, userId, topicId, chooseMessage])
+
+  useEffect(() => {
+    const validSelection =
+      selectedEntry?.id === messageId ||
+      (lastSavedMessage !== null && lastSavedMessage.id === messageId)
+
+    if (messageId !== null && validSelection) {
+      storeMessage(userId, topicId, messageId)
+    }
+  }, [messageId, selectedEntry?.id, lastSavedMessage, userId, topicId])
+
   async function handleSave(input: { title: string | null; content: string }) {
     const controller = controllerRef.current
-    if (!controller || controller.signal.aborted || state.status !== 'ready') {
+    if (
+      !controller ||
+      controller.signal.aborted ||
+      state.status !== 'ready' ||
+      messageUnavailable
+    ) {
       throw new Error('Preparation is not ready')
     }
 
@@ -75,13 +128,19 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     setRefreshFailed(false)
 
     const messageId = await createTopicMessage(topicId, {
-      preparationId,
+      preparationId: selectedPreparationId,
       type: 'entry',
       ...input,
     })
 
     if (messageId === null) throw new Error('Missing message ID')
     if (controller.signal.aborted) return
+
+    setLastSavedMessage({
+      id: messageId,
+      preparationId: selectedPreparationId,
+    })
+    chooseMessage(messageId, { replace: true })
 
     setSaved(true)
 
@@ -100,7 +159,7 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
 
   const currentEntries =
     state.status === 'ready'
-      ? state.entries.filter((entry) => entry.preparation_id === preparationId)
+      ? state.entries.filter((entry) => entry.preparation_id === selectedPreparationId)
       : []
 
   const dateFormatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
@@ -121,6 +180,10 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
         <p role='alert' className='mt-4'>
           {t('preparations.loadFailed')}
         </p>
+      ) : messageUnavailable ? (
+        <p role='alert' className='mt-4'>
+          {t('preparations.messageUnavailable')}
+        </p>
       ) : currentEntries.length === 0 ? (
         <p className='mt-4 text-brand-700'>{t('preparations.empty')}</p>
       ) : (
@@ -138,9 +201,13 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
           ))}
         </ol>
       )}
-      {state.status === 'ready' && (
+      {state.status === 'ready' && !messageUnavailable && (
         <>
-          <PreparationEntryComposer onSave={handleSave} onStateChange={setComposerState} />
+          <PreparationEntryComposer
+            key={selectedPreparationId}
+            onSave={handleSave}
+            onStateChange={setComposerState}
+          />
 
           {saved && (
             <p role='status' className='mt-3 text-sm text-brand-700'>

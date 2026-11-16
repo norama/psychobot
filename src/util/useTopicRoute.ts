@@ -8,6 +8,7 @@ export function useTopicRoute() {
     function chooseTopic(nextTopicId: string) {
         const params = new URLSearchParams(location.search);
         params.set("topic", nextTopicId);
+        params.delete("message");
 
         navigate({
             pathname: location.pathname,

@@ -101,7 +101,8 @@
     "saving": "Ukládám…",
     "saveFailed": "Zápisek se nepodařilo uložit. Váš text zůstal zachován. Zkuste to znovu.",
     "saved": "Zápisek uložen.",
-    "refreshFailed": "Zápisek je uložen, ale seznam se nepodařilo aktualizovat. Obnovte stránku."
+    "refreshFailed": "Zápisek je uložen, ale seznam se nepodařilo aktualizovat. Obnovte stránku.",
+    "messageUnavailable": "Zápisek není dostupný v tomto tématu."
   },
   "user": {
     "menuLabel": "Účet"
