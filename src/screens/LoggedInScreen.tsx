@@ -79,9 +79,18 @@ export function LoggedInScreen({
     )
   }, [dataRole, role, workspaceId, navigate, location.search, location.hash])
 
-  if (state.status === 'loading') return <p role='status'>{t('workspace.loading')}</p>
+  if (state.status === 'loading')
+    return (
+      <p role='status' className='p-6 sm:p-10'>
+        {t('workspace.loading')}
+      </p>
+    )
   if (state.status === 'error') {
-    return <p role='alert'>{t('workspace.loadFailed')}</p>
+    return (
+      <p role='alert' className='p-6 sm:p-10'>
+        {t('workspace.loadFailed')}
+      </p>
+    )
   }
   if (workspaceId === null) {
     return (
