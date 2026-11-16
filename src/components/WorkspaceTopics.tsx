@@ -2,11 +2,17 @@ import { Button } from '@/ui/Button'
 import { storeTopic } from '@/util/topicPreference'
 import { useTopicRoute } from '@/util/useTopicRoute'
 import { useTopics } from '@/util/useTopics'
+import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NewTopicDialog } from './NewTopicDialog'
 
-export function WorkspaceTopics({ workspaceId }: { workspaceId: string }) {
+type WorkspaceTopicsProps = {
+  workspaceId: string
+  renderTopicContent?: (topicId: string) => ReactNode
+}
+
+export function WorkspaceTopics({ workspaceId, renderTopicContent }: WorkspaceTopicsProps) {
   const { t, i18n } = useTranslation()
   const { topicId, chooseTopic } = useTopicRoute()
   const [creating, setCreating] = useState(false)
@@ -96,7 +102,11 @@ export function WorkspaceTopics({ workspaceId }: { workspaceId: string }) {
               </p>
             )}
 
-            <p className='mt-6 text-brand-700'>{t('topics.contentComingSoon')}</p>
+            {renderTopicContent ? (
+              renderTopicContent(selectedTopic.id)
+            ) : (
+              <p className='mt-6 text-brand-700'>{t('topics.contentComingSoon')}</p>
+            )}
           </>
         )}
       </section>

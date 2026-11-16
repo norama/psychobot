@@ -89,6 +89,20 @@
     "unavailable": "Téma není dostupné v tomto pracovním prostoru.",
     "contentComingSoon": "Přípravu a zprávy k tématu přidáme v dalším kroku."
   },
+  "preparations": {
+    "title": "Soukromá příprava",
+    "privateHint": "Zde si můžete zapisovat své myšlenky. Terapeut tyto zápisky nevidí.",
+    "loading": "Načítám zápisky…",
+    "loadFailed": "Zápisky se nepodařilo načíst. Zkuste obnovit stránku.",
+    "empty": "Zatím zde nemáte žádné zápisky.",
+    "entryTitle": "Nadpis (nepovinný)",
+    "entryContent": "Moje myšlenky",
+    "save": "Uložit",
+    "saving": "Ukládám…",
+    "saveFailed": "Zápisek se nepodařilo uložit. Váš text zůstal zachován. Zkuste to znovu.",
+    "saved": "Zápisek uložen.",
+    "refreshFailed": "Zápisek je uložen, ale seznam se nepodařilo aktualizovat. Obnovte stránku."
+  },
   "user": {
     "menuLabel": "Účet"
   },
