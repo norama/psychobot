@@ -1,3 +1,4 @@
+import { getSummarySourcesForMessages, type SummarySource } from '@/db/summarySources'
 import { createTopicMessage, getTopicMessages, type TopicMessage } from '@/db/topicMessages'
 import { getStoredMessage, storeMessage } from '@/util/messagePreference'
 import { useMessageRoute } from '@/util/useMessageRoute'
@@ -12,18 +13,40 @@ type ClientPreparationProps = {
 }
 
 type EntriesState =
-  { status: 'loading' } | { status: 'error' } | { status: 'ready'; entries: TopicMessage[] }
+  | { status: 'loading' }
+  | { status: 'error' }
+  | {
+      status: 'ready'
+      entries: TopicMessage[]
+      sources: SummarySource[]
+    }
 
-async function loadTopicMessages(topicId: string, signal: AbortSignal): Promise<TopicMessage[]> {
+async function loadTopicMessages(
+  topicId: string,
+  signal: AbortSignal,
+): Promise<{
+  entries: TopicMessage[]
+  sources: SummarySource[]
+}> {
   const messages = await getTopicMessages(topicId, signal)
   if (messages === null) throw new Error('Missing message list')
 
-  return [...messages].sort((a, b) => {
+  signal.throwIfAborted()
+
+  const sources = await getSummarySourcesForMessages(
+    messages.map((message) => message.id),
+    signal,
+  )
+  if (sources === null) throw new Error('Missing summary relationships')
+
+  const entries = [...messages].sort((a, b) => {
     const dateA = new Date(a.shared_at ?? a.created_at).getTime()
     const dateB = new Date(b.shared_at ?? b.created_at).getTime()
 
     return dateA - dateB || a.id.localeCompare(b.id)
   })
+
+  return { entries, sources }
 }
 
 export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
@@ -48,10 +71,10 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
       setState({ status: 'loading' })
 
       try {
-        const entries = await loadTopicMessages(topicId, controller.signal)
+        const { entries, sources } = await loadTopicMessages(topicId, controller.signal)
         if (controller.signal.aborted) return
 
-        setState({ status: 'ready', entries })
+        setState({ status: 'ready', entries, sources })
       } catch (error) {
         if (controller.signal.aborted) return
 
@@ -126,10 +149,10 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     // Creation succeeded. A refresh failure must not turn it into a failed save,
     // because retrying creation would produce another entry.
     try {
-      const entries = await loadTopicMessages(topicId, controller.signal)
+      const { entries, sources } = await loadTopicMessages(topicId, controller.signal)
       if (controller.signal.aborted) return
 
-      setState({ status: 'ready', entries })
+      setState({ status: 'ready', entries, sources })
     } catch (error) {
       if (controller.signal.aborted) return
 

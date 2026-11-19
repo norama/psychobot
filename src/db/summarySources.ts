@@ -5,16 +5,19 @@ export type SummarySource = {
     source_id: string;
 };
 
-// Returns direct relationships visible to the current user.
-// Recursive traversal stays in the database.
-export async function getSummarySources(
-    summaryId: string,
+// Returns direct relationships for the supplied messages.
+// The caller supplies message IDs from the current topic.
+export async function getSummarySourcesForMessages(
+    summaryIds: string[],
     signal?: AbortSignal,
 ): Promise<SummarySource[] | null> {
+    if (summaryIds.length === 0) return [];
+
     const query = db
         .from("summary_sources")
         .select("summary_id, source_id")
-        .eq("summary_id", summaryId)
+        .in("summary_id", summaryIds)
+        .order("summary_id", { ascending: true })
         .order("source_id", { ascending: true });
 
     if (signal) query.abortSignal(signal);
@@ -26,6 +29,14 @@ export async function getSummarySources(
 
     if (error) throw error;
     return data;
+}
+
+// Retains the existing single-message interface.
+export async function getSummarySources(
+    summaryId: string,
+    signal?: AbortSignal,
+): Promise<SummarySource[] | null> {
+    return getSummarySourcesForMessages([summaryId], signal);
 }
 
 // Replaces the complete source list of a draft summary.
