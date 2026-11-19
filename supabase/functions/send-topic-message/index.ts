@@ -89,7 +89,6 @@ export default {
       `)
       .eq("id", messageId)
       .eq("created_by", user.id)
-      .in("type", ["summary", "message"])
       .maybeSingle()
       .overrideTypes<MessageLookup, { merge: false }>();
 
@@ -146,17 +145,17 @@ export default {
 
     const recipientEmail = recipient.email;
 
-    // Finalize the preparation of the message before sharing
-    const { error: finalizePreparationError } = await ctx.supabase.rpc(
-      "finalize_preparation",
+    // Freeze the selected message and all its recursive sources
+    const { error: finalizeMessageError } = await ctx.supabase.rpc(
+      "finalize_topic_message",
       {
         p_message_id: messageId,
       },
     );
 
-    if (finalizePreparationError) {
+    if (finalizeMessageError) {
       return jsonResponse(
-        { message: "Nepodařilo se finalizovat přípravu." },
+        { message: "Nepodařilo se uzamknout zprávu a její zdroje." },
         500,
       );
     }

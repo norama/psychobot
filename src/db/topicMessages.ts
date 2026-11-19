@@ -1,16 +1,13 @@
 import { db } from "./supabase";
 import { handleError } from "./util";
 
-export type TopicMessageType = "entry" | "summary" | "message";
 export type TopicMessageStatus = "draft" | "final" | "shared";
 
 export type TopicMessage = {
   id: string;
   topic_id: string;
-  preparation_id: string;
   title: string | null;
   content: string;
-  type: TopicMessageType;
   status: TopicMessageStatus;
   created_by: string;
   created_at: string;
@@ -23,11 +20,6 @@ export type TopicMessageInput = {
   title?: string | null;
 };
 
-export type CreateTopicMessageInput = TopicMessageInput & {
-  preparationId: string;
-  type: TopicMessageType;
-};
-
 // RLS returns the caller's private content and either participant's shared messages.
 export async function getTopicMessages(
   topicId: string,
@@ -36,7 +28,7 @@ export async function getTopicMessages(
   const query = db
     .from("topic_messages")
     .select(
-      "id, topic_id, preparation_id, title, content, type, status, created_by, created_at, updated_at, shared_at",
+      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at",
     )
     .eq("topic_id", topicId)
     .order("created_at", { ascending: true })
@@ -52,15 +44,38 @@ export async function getTopicMessages(
   return data;
 }
 
+export async function getTopicMessage(
+  topicId: string,
+  messageId: string,
+  signal?: AbortSignal,
+): Promise<TopicMessage | null> {
+  const query = db
+    .from("topic_messages")
+    .select(
+      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at",
+    )
+    .eq("topic_id", topicId)
+    .eq("id", messageId)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (signal) query.abortSignal(signal);
+
+  const { data, error } = await query.overrideTypes<
+    TopicMessage[],
+    { merge: false }
+  >();
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+
 // The database sets the author and creates a private draft.
 export async function createTopicMessage(
   topicId: string,
-  input: CreateTopicMessageInput,
+  input: TopicMessageInput,
 ): Promise<string | null> {
   const { data, error } = await db.rpc("create_topic_message", {
     p_topic_id: topicId,
-    p_preparation_id: input.preparationId,
-    p_type: input.type,
     p_content: input.content,
     p_title: input.title ?? null,
   });
