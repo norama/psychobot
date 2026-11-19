@@ -89,9 +89,17 @@
     "unavailable": "Téma není dostupné v tomto pracovním prostoru.",
     "contentComingSoon": "Přípravu a zprávy k tématu přidáme v dalším kroku."
   },
-  "preparations": {
-    "title": "Soukromá příprava",
-    "privateHint": "Zde si můžete zapisovat své myšlenky. Terapeut tyto zápisky nevidí.",
+  "messages": {
+    "title": "Zprávy k tématu",
+    "privacyHint": "Soukromé zprávy vidíte jen vy. Odeslané zprávy vidíte oba.",
+    "select": "Vybrat",
+    "selected": "Vybráno",
+    "status": {
+      "draft": "Soukromé · Koncept",
+      "final": "Soukromé · Uzamčeno",
+      "sent": "Odesláno",
+      "received": "Přijato"
+    },
     "loading": "Načítám zápisky…",
     "loadFailed": "Zápisky se nepodařilo načíst. Zkuste obnovit stránku.",
     "empty": "Zatím zde nemáte žádné zápisky.",

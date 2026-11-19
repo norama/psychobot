@@ -67,7 +67,7 @@ export function PreparationEntryComposer({ onSave, onStateChange }: PreparationE
       <fieldset disabled={saving} className='space-y-3'>
         <div>
           <label htmlFor={`${id}-title`} className='text-sm font-medium'>
-            {t('preparations.entryTitle')}
+            {t('messages.entryTitle')}
           </label>
           <input
             id={`${id}-title`}
@@ -79,7 +79,7 @@ export function PreparationEntryComposer({ onSave, onStateChange }: PreparationE
 
         <div>
           <label htmlFor={`${id}-content`} className='text-sm font-medium'>
-            {t('preparations.entryContent')}
+            {t('messages.entryContent')}
           </label>
           <textarea
             id={`${id}-content`}
@@ -93,13 +93,13 @@ export function PreparationEntryComposer({ onSave, onStateChange }: PreparationE
 
         {failed && (
           <p role='alert' className='text-sm'>
-            {t('preparations.saveFailed')}
+            {t('messages.saveFailed')}
           </p>
         )}
 
         <div className='flex justify-end'>
           <Button type='submit' disabled={saving || !content.trim()}>
-            {t(saving ? 'preparations.saving' : 'preparations.save')}
+            {t(saving ? 'messages.saving' : 'messages.save')}
           </Button>
         </div>
       </fieldset>
