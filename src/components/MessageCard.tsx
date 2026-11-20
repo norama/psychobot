@@ -11,6 +11,7 @@ type MessageCardProps = {
 export function MessageCard({ message, isOwn, selected, onSelect }: MessageCardProps) {
   const { t, i18n } = useTranslation()
   const displayDate = message.shared_at ?? message.created_at
+  const collapsed = !isOwn && !selected
 
   const statusKey = !isOwn
     ? 'received'
@@ -48,7 +49,12 @@ export function MessageCard({ message, isOwn, selected, onSelect }: MessageCardP
 
       {message.title && <span className='block break-words font-semibold'>{message.title}</span>}
 
-      <span className='block whitespace-pre-wrap break-words'>{message.content}</span>
+      <span
+        className={
+          collapsed ? 'line-clamp-2 break-words' : 'block whitespace-pre-wrap break-words'
+        }>
+        {message.content}
+      </span>
 
       <time dateTime={displayDate} className='mt-2 block text-xs text-brand-700'>
         {dateFormatter.format(new Date(displayDate))}

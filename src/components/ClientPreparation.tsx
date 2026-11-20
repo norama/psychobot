@@ -1,11 +1,26 @@
-import { getSummarySourcesForMessages, type SummarySource } from '@/db/summarySources'
-import { createTopicMessage, getTopicMessages, type TopicMessage } from '@/db/topicMessages'
+import {
+  getSummarySourcesForMessages,
+  setSummarySources,
+  type SummarySource,
+} from '@/db/summarySources'
+import {
+  createTopicMessage,
+  deleteTopicMessage,
+  getTopicMessages,
+  updateTopicMessage,
+  type TopicMessage,
+  type TopicMessageInput,
+} from '@/db/topicMessages'
+import { Button } from '@/ui/Button'
 import { getStoredMessage, storeMessage } from '@/util/messagePreference'
+import { buildMessageTree } from '@/util/messageTree'
 import { useMessageRoute } from '@/util/useMessageRoute'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MessageCard } from './MessageCard'
+import { MessageTreeView } from './MessageTreeView'
 import { PreparationEntryComposer } from './PreparationEntryComposer'
+import { SummaryDraftDialog } from './SummaryDraftDialog'
+import { SummarySourceDialog } from './SummarySourceDialog'
 
 type ClientPreparationProps = {
   topicId: string
@@ -56,12 +71,25 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
   const [state, setState] = useState<EntriesState>({ status: 'loading' })
   const [saved, setSaved] = useState(false)
   const [composerState, setComposerState] = useState({
-    dirty: false,
     saving: false,
   })
   const [refreshFailed, setRefreshFailed] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
   const selectionRestoredRef = useRef(false)
+  const [choosingSources, setChoosingSources] = useState(false)
+  const [summarySourceIds, setSummarySourceIds] = useState<string[] | null>(null)
+  const pendingSummaryIdRef = useRef<string | null>(null)
+
+  const tree = useMemo(
+    () => (state.status === 'ready' ? buildMessageTree(state.entries, state.sources) : null),
+    [state],
+  )
+
+  const summaryCandidates = tree
+    ? tree.rootIds
+        .map((id) => tree.messagesById.get(id)!)
+        .filter((message) => message.created_by === userId)
+    : []
 
   useEffect(() => {
     const controller = new AbortController()
@@ -122,9 +150,10 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     }
   }, [messageId, selectedEntry?.id, lastSavedMessageId, userId, topicId])
 
-  async function handleSave(input: { title: string | null; content: string }) {
+  async function handleSave(input: TopicMessageInput) {
     const controller = controllerRef.current
     if (
+      tree === null ||
       !controller ||
       controller.signal.aborted ||
       state.status !== 'ready' ||
@@ -136,13 +165,32 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     setSaved(false)
     setRefreshFailed(false)
 
-    const messageId = await createTopicMessage(topicId, input)
+    let savedMessageId = pendingSummaryIdRef.current
 
-    if (messageId === null) throw new Error('Missing message ID')
+    if (savedMessageId === null) {
+      savedMessageId = await createTopicMessage(topicId, input)
+      if (savedMessageId === null) throw new Error('Missing message ID')
+
+      if (summarySourceIds !== null) {
+        pendingSummaryIdRef.current = savedMessageId
+      }
+    } else {
+      // Retry an incomplete summary save, including any text corrections.
+      await updateTopicMessage(savedMessageId, input)
+    }
+
     if (controller.signal.aborted) return
 
-    setLastSavedMessageId(messageId)
-    chooseMessage(messageId, { replace: true })
+    if (summarySourceIds !== null) {
+      await setSummarySources(savedMessageId, summarySourceIds)
+      if (controller.signal.aborted) return
+    }
+
+    pendingSummaryIdRef.current = null
+    setSummarySourceIds(null)
+
+    setLastSavedMessageId(savedMessageId)
+    chooseMessage(savedMessageId, { replace: true })
 
     setSaved(true)
 
@@ -161,7 +209,27 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     }
   }
 
-  const currentEntries = state.status === 'ready' ? state.entries : []
+  async function handleCancelSummary() {
+    const pendingId = pendingSummaryIdRef.current
+
+    if (pendingId !== null) {
+      await deleteTopicMessage(pendingId)
+      pendingSummaryIdRef.current = null
+    }
+
+    setSummarySourceIds(null)
+  }
+
+  const errorMessage =
+    state.status === 'loading'
+      ? null
+      : state.status === 'error'
+        ? t('messages.loadFailed')
+        : tree === null
+          ? t('messages.invalidTree')
+          : messageUnavailable
+            ? t('messages.messageUnavailable')
+            : null
 
   return (
     <section className='mt-6'>
@@ -172,32 +240,46 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
         <p role='status' className='mt-4'>
           {t('messages.loading')}
         </p>
-      ) : state.status === 'error' ? (
+      ) : errorMessage ? (
         <p role='alert' className='mt-4'>
-          {t('messages.loadFailed')}
+          {errorMessage}
         </p>
-      ) : messageUnavailable ? (
-        <p role='alert' className='mt-4'>
-          {t('messages.messageUnavailable')}
-        </p>
-      ) : currentEntries.length === 0 ? (
-        <p className='mt-4 text-brand-700'>{t('messages.empty')}</p>
       ) : (
-        <ol className='mt-6 space-y-4'>
-          {currentEntries.map((entry) => (
-            <li key={entry.id}>
-              <MessageCard
-                message={entry}
-                isOwn={entry.created_by === userId}
-                selected={entry.id === messageId}
-                onSelect={() => chooseMessage(entry.id)}
-              />
-            </li>
-          ))}
-        </ol>
+        tree !== null &&
+        (tree.rootIds.length === 0 ? (
+          <p className='mt-4 text-brand-700'>{t('messages.empty')}</p>
+        ) : (
+          <MessageTreeView
+            tree={tree}
+            userId={userId}
+            selectedMessageId={messageId}
+            onSelect={(id: string | null) => {
+              if (id === null) storeMessage(userId, topicId, null)
+              chooseMessage(id)
+            }}
+          />
+        ))
       )}
-      {state.status === 'ready' && !messageUnavailable && (
+
+      {state.status === 'ready' && tree !== null && !messageUnavailable && (
         <>
+          <div className='mt-6'>
+            <Button
+              type='button'
+              variant='secondary'
+              disabled={
+                composerState.saving ||
+                summaryCandidates.length === 0 ||
+                choosingSources ||
+                summarySourceIds !== null
+              }
+              onClick={() => {
+                setSaved(false)
+                setChoosingSources(true)
+              }}>
+              {t('messages.createSummary')}
+            </Button>
+          </div>
           <PreparationEntryComposer onSave={handleSave} onStateChange={setComposerState} />
 
           {saved && (
@@ -212,6 +294,24 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
             </p>
           )}
         </>
+      )}
+      {choosingSources && tree !== null && (
+        <SummarySourceDialog
+          candidates={summaryCandidates}
+          onClose={() => setChoosingSources(false)}
+          onSelected={(ids) => {
+            setSummarySourceIds(ids)
+            setChoosingSources(false)
+            setSaved(false)
+          }}
+        />
+      )}
+      {summarySourceIds !== null && state.status === 'ready' && (
+        <SummaryDraftDialog
+          sources={state.entries.filter((message) => summarySourceIds.includes(message.id))}
+          onSave={handleSave}
+          onCancel={handleCancelSummary}
+        />
       )}
     </section>
   )

@@ -3,15 +3,23 @@ import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 type PreparationEntryComposerProps = {
+  initialValue?: {
+    title: string | null
+    content: string
+  }
   onSave: (input: { title: string | null; content: string }) => Promise<void>
   onStateChange: (state: { dirty: boolean; saving: boolean }) => void
 }
 
-export function PreparationEntryComposer({ onSave, onStateChange }: PreparationEntryComposerProps) {
+export function PreparationEntryComposer({
+  initialValue,
+  onSave,
+  onStateChange,
+}: PreparationEntryComposerProps) {
   const { t } = useTranslation()
   const id = useId()
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [title, setTitle] = useState(initialValue?.title ?? '')
+  const [content, setContent] = useState(initialValue?.content ?? '')
   const [saving, setSaving] = useState(false)
   const [failed, setFailed] = useState(false)
 
