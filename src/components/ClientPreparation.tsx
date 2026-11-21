@@ -12,6 +12,7 @@ import {
   type TopicMessageInput,
 } from '@/db/topicMessages'
 import { Button } from '@/ui/Button'
+import { SummaryIcon } from '@/ui/SummaryIcon'
 import { getStoredMessage, storeMessage } from '@/util/messagePreference'
 import { buildMessageTree } from '@/util/messageTree'
 import { useMessageRoute } from '@/util/useMessageRoute'
@@ -267,6 +268,7 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
             <Button
               type='button'
               variant='secondary'
+              className='inline-flex items-center gap-2'
               disabled={
                 composerState.saving ||
                 summaryCandidates.length === 0 ||
@@ -277,6 +279,7 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
                 setSaved(false)
                 setChoosingSources(true)
               }}>
+              <SummaryIcon />
               {t('messages.createSummary')}
             </Button>
           </div>

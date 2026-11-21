@@ -131,7 +131,8 @@
     "summaryDefaultTitle": "Shrnutí: {{titles}}",
     "summaryDraftHint": "Počet zdrojů: {{count}}. Níže je spojený text vybraných zpráv. Upravte jej do podoby shrnutí.",
     "cancellingSummary": "Ruším shrnutí…",
-    "cancelSummaryFailed": "Rozpracované shrnutí se nepodařilo odstranit. Dialog zůstává otevřený. Zkuste to znovu."
+    "cancelSummaryFailed": "Rozpracované shrnutí se nepodařilo odstranit. Dialog zůstává otevřený. Zkuste to znovu.",
+    "summary": "Shrnutí"
   },
   "user": {
     "menuLabel": "Účet"

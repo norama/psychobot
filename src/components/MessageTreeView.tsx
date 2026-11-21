@@ -32,6 +32,7 @@ function MessageView(props: MessageViewProps) {
       <MessageCard
         message={message}
         isOwn={message.created_by === userId}
+        isSummary={children.length > 0}
         selected={messageId === selectedMessageId}
         onSelect={() => onSelect(messageId)}
       />

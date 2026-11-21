@@ -1,14 +1,16 @@
 import type { TopicMessage } from '@/db/topicMessages'
+import { SummaryIcon } from '@/ui/SummaryIcon'
 import { useTranslation } from 'react-i18next'
 
 type MessageCardProps = {
   message: TopicMessage
   isOwn: boolean
+  isSummary: boolean
   selected: boolean
   onSelect: () => void
 }
 
-export function MessageCard({ message, isOwn, selected, onSelect }: MessageCardProps) {
+export function MessageCard({ message, isOwn, isSummary, selected, onSelect }: MessageCardProps) {
   const { t, i18n } = useTranslation()
   const displayDate = message.shared_at ?? message.created_at
   const collapsed = !isOwn && !selected
@@ -43,7 +45,13 @@ export function MessageCard({ message, isOwn, selected, onSelect }: MessageCardP
             ? 'border-brand-200 bg-brand-50 hover:border-brand-500 hover:bg-brand-100'
             : 'border-brand-300 bg-white hover:border-brand-500 hover:bg-brand-50'
       }`}>
-      <span className='mb-2 block text-xs font-medium text-brand-700'>
+      <span className='mb-2 flex items-center gap-2 text-xs font-medium text-brand-700'>
+        {isSummary && (
+          <>
+            <SummaryIcon />
+            <span className='sr-only'>{t('messages.summary')}</span>
+          </>
+        )}
         {t(`messages.status.${statusKey}`)}
       </span>
 
