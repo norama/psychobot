@@ -9,6 +9,7 @@ import './i18n'
 import { InviteScreen } from './screens/InviteScreen'
 import { LoggedInScreen } from './screens/LoggedInScreen'
 import { LoggedOutScreen } from './screens/LoggedOutScreen'
+import { MessageScreen } from './screens/MessageScreen'
 import { UserMenu } from './screens/UserMenu'
 import './style.css'
 import { Layout } from './ui/Layout'
@@ -18,9 +19,13 @@ import { getStoredTopic } from './util/topicPreference'
 import { useAppRoute } from './util/useAppRoute'
 import { getStoredWorkspace } from './util/workspaceData'
 
-type AppRouteProps = { role: Role; isInvitationRoute?: boolean }
+type AppRouteProps = { role: Role; isInvitationRoute?: boolean; isMessageRoute?: boolean }
 
-function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
+function AuthenticatedApp({
+  role,
+  isInvitationRoute = false,
+  isMessageRoute = false,
+}: AppRouteProps) {
   const { t } = useTranslation()
   const { chooseRole, workspaceId, invitationToken, location, navigate } = useAppRoute(
     role,
@@ -58,7 +63,9 @@ function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
     // Keep an unavailable link for account switching; ordinary logout returns
     // to the overview. Scope the result to the current account and workspace.
     const keepDestination =
-      isInvitationRoute || (workspaceKey !== null && unavailableWorkspace === workspaceKey)
+      isInvitationRoute ||
+      isMessageRoute ||
+      (workspaceKey !== null && unavailableWorkspace === workspaceKey)
     const signedOut = await signOut()
     if (signedOut && !keepDestination) navigate(`/${role}`, { replace: true })
   }
@@ -91,14 +98,14 @@ function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
 
   return (
     <Layout
-      roleLabel={session ? t(`connections.roles.${role}`) : undefined}
+      roleLabel={session && !isMessageRoute ? t(`connections.roles.${role}`) : undefined}
       narrow={!session || workspaceId === null}
       actions={
         session && (
           <UserMenu
             db={db}
             userId={session.user.id}
-            role={role}
+            role={isMessageRoute ? undefined : role}
             busy={busy}
             onSignOut={handleSignOut}
           />
@@ -106,7 +113,9 @@ function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
       }>
       {error && <p role='alert'>{error}</p>}
       {session ? (
-        isInvitationRoute ? (
+        isMessageRoute ? (
+          <MessageScreen key={`${session.user.id}:${location.pathname}`} />
+        ) : isInvitationRoute ? (
           <InviteScreen
             key={`${session.user.id}:${session.user.email ?? ''}:${invitationToken}`}
             token={invitationToken}
@@ -127,6 +136,7 @@ function AuthenticatedApp({ role, isInvitationRoute = false }: AppRouteProps) {
           role={role}
           busy={busy}
           isInvitationRoute={isInvitationRoute}
+          hideRoleSwitch={isMessageRoute}
           onChooseRole={chooseRole}
           onSignIn={handleSignIn}
         />
@@ -178,6 +188,11 @@ createRoot(document.getElementById('root')!).render(
         <Route path='/client' caseSensitive element={<App role='client' />} />
         <Route path='/therapist' caseSensitive element={<App role='therapist' />} />
         <Route path='/invite' caseSensitive element={<App role='client' isInvitationRoute />} />
+        <Route
+          path='/message/:messageId'
+          caseSensitive
+          element={<App role='client' isMessageRoute />}
+        />
         <Route path='*' element={<RememberedDestination />} />
       </Routes>
     </BrowserRouter>

@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 type UserMenuProps = {
   db: SupabaseClient
   userId: string
-  role: Role
+  role?: Role
   busy: boolean
   onSignOut: () => void
 }
@@ -38,18 +38,22 @@ export function UserMenu({ db, userId, role, busy, onSignOut }: UserMenuProps) {
     <Menu label={t('user.menuLabel')}>
       <div>
         <p className='m-0 font-semibold'>{name ?? '—'}</p>
-        <p className='m-0 text-sm text-brand-700'>
-          {t('connections.yourRole')}: {t(`connections.roles.${role}`)}
-        </p>
+        {role && (
+          <p className='m-0 text-sm text-brand-700'>
+            {t('connections.yourRole')}: {t(`connections.roles.${role}`)}
+          </p>
+        )}
       </div>
-      <AppLink
-        to={`/${role}`}
-        onClick={(event) => {
-          event.currentTarget.closest('details')?.removeAttribute('open')
-        }}
-        className='text-sm font-medium mb-4'>
-        {t('workspace.backToOverview')}
-      </AppLink>
+      {role && (
+        <AppLink
+          to={`/${role}`}
+          onClick={(event) => {
+            event.currentTarget.closest('details')?.removeAttribute('open')
+          }}
+          className='text-sm font-medium mb-4'>
+          {t('workspace.backToOverview')}
+        </AppLink>
+      )}
       <Button variant='secondary' disabled={busy} onClick={onSignOut}>
         {t('auth.signOut')}
       </Button>

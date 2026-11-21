@@ -148,7 +148,8 @@
     "deleteSummaryHint": "Zdrojové zprávy zůstanou zachovány.",
     "deleteSourceHint": "Zpráva bude odstraněna i ze zdrojů navazujícího shrnutí. Text shrnutí zůstane beze změny.",
     "deleteFailed": "Zprávu se nepodařilo smazat. Zkuste to znovu.",
-    "locked": "Zpráva je uzamčena"
+    "locked": "Zpráva je uzamčena",
+    "openingLink": "Otevírání zprávy…"
   },
   "user": {
     "menuLabel": "Účet"
