@@ -140,7 +140,15 @@
     "discardTitle": "Zahodit změny?",
     "discardHint": "Máte neuložené změny. Chcete je zahodit?",
     "keepEditing": "Pokračovat v úpravách",
-    "discardChanges": "Zahodit změny"
+    "discardChanges": "Zahodit změny",
+    "delete": "Smazat",
+    "deleting": "Mazání…",
+    "deleteTitle": "Smazat zprávu?",
+    "deleteHint": "Tuto akci nelze vrátit zpět.",
+    "deleteSummaryHint": "Zdrojové zprávy zůstanou zachovány.",
+    "deleteSourceHint": "Zpráva bude odstraněna i ze zdrojů navazujícího shrnutí. Text shrnutí zůstane beze změny.",
+    "deleteFailed": "Zprávu se nepodařilo smazat. Zkuste to znovu.",
+    "locked": "Zpráva je uzamčena"
   },
   "user": {
     "menuLabel": "Účet"

@@ -12,7 +12,7 @@ import {
   type TopicMessageInput,
 } from '@/db/topicMessages'
 import { Button } from '@/ui/Button'
-import { SummaryIcon } from '@/ui/SummaryIcon'
+import { SummaryIcon } from '@/ui/icons/SummaryIcon'
 import { getStoredMessage, storeMessage } from '@/util/messagePreference'
 import { buildMessageTree } from '@/util/messageTree'
 import { useMessageRoute } from '@/util/useMessageRoute'
@@ -258,6 +258,48 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     }
   }
 
+  async function handleDelete(id: string) {
+    const controller = controllerRef.current
+    const message =
+      state.status === 'ready' ? state.entries.find((entry) => entry.id === id) : undefined
+
+    if (
+      !controller ||
+      controller.signal.aborted ||
+      message?.created_by !== userId ||
+      message.status !== 'draft'
+    ) {
+      throw new Error('Message is not deletable')
+    }
+
+    await deleteTopicMessage(id)
+    if (controller.signal.aborted) return
+
+    setSaved(false)
+
+    setState((previous) =>
+      previous.status !== 'ready'
+        ? previous
+        : {
+            ...previous,
+            entries: previous.entries.filter((entry) => entry.id !== id),
+            sources: previous.sources.filter(
+              (source) => source.summary_id !== id && source.source_id !== id,
+            ),
+          },
+    )
+
+    setLastSavedMessageId((previous) => (previous === id ? null : previous))
+
+    if (getStoredMessage(userId, topicId) === id) {
+      storeMessage(userId, topicId, null)
+    }
+
+    if (messageId === id) {
+      chooseMessage(null, { replace: true })
+    }
+  }
+
   async function handleCancelSummary() {
     const pendingId = pendingSummaryIdRef.current
 
@@ -307,6 +349,7 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
               chooseMessage(id)
             }}
             onUpdate={handleUpdate}
+            onDelete={handleDelete}
           />
         ))
       )}

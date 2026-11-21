@@ -12,6 +12,7 @@ type MessageTreeViewProps = {
   selectedMessageId: string | null
   onSelect: (messageId: string | null) => void
   onUpdate: (messageId: string, input: TopicMessageInput) => Promise<void>
+  onDelete: (messageId: string) => Promise<void>
 }
 
 type MessageViewProps = MessageTreeViewProps & {
@@ -32,6 +33,7 @@ function MessageView(props: MessageViewProps) {
     selectedMessageId,
     onSelect,
     onUpdate,
+    onDelete,
     onCancelEdit,
     messageId,
     expanded,
@@ -59,6 +61,7 @@ function MessageView(props: MessageViewProps) {
         editDisabled={editingMessageId !== null}
         isSource={tree.parentById.has(messageId)}
         onEdit={() => onEdit(messageId)}
+        onDelete={() => onDelete(messageId)}
         onCancel={onCancelEdit}
         onSave={async (input) => {
           await onUpdate(messageId, input)
@@ -94,6 +97,7 @@ function MessageView(props: MessageViewProps) {
                   onEdit={onEdit}
                   onCancelEdit={onCancelEdit}
                   onEditorStateChange={onEditorStateChange}
+                  onDelete={onDelete}
                 />
               ))}
             </ol>
@@ -110,6 +114,7 @@ export function MessageTreeView({
   selectedMessageId,
   onSelect,
   onUpdate,
+  onDelete,
 }: MessageTreeViewProps) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
@@ -206,6 +211,7 @@ export function MessageTreeView({
             selectedMessageId={selectedMessageId}
             onSelect={onSelect}
             onUpdate={onUpdate}
+            onDelete={onDelete}
             expanded={expanded}
             ancestors={ancestors}
             onToggle={toggle}
