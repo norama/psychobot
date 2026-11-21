@@ -210,6 +210,54 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     }
   }
 
+  async function handleUpdate(id: string, input: TopicMessageInput) {
+    const controller = controllerRef.current
+    const message =
+      state.status === 'ready' ? state.entries.find((entry) => entry.id === id) : undefined
+
+    if (
+      !controller ||
+      controller.signal.aborted ||
+      message?.created_by !== userId ||
+      message.status !== 'draft'
+    ) {
+      throw new Error('Message is not editable')
+    }
+
+    setSaved(false)
+    setRefreshFailed(false)
+
+    await updateTopicMessage(id, input)
+    if (controller.signal.aborted) return
+
+    // Reflect the successful save even if the following refresh fails.
+    setState((previous) =>
+      previous.status !== 'ready'
+        ? previous
+        : {
+            ...previous,
+            entries: previous.entries.map((entry) =>
+              entry.id === id
+                ? { ...entry, content: input.content, title: input.title ?? null }
+                : entry,
+            ),
+          },
+    )
+    setSaved(true)
+
+    try {
+      const { entries, sources } = await loadTopicMessages(topicId, controller.signal)
+      if (controller.signal.aborted) return
+
+      setState({ status: 'ready', entries, sources })
+    } catch (error) {
+      if (controller.signal.aborted) return
+
+      console.error('Failed to refresh messages after editing', error)
+      setRefreshFailed(true)
+    }
+  }
+
   async function handleCancelSummary() {
     const pendingId = pendingSummaryIdRef.current
 
@@ -258,6 +306,7 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
               if (id === null) storeMessage(userId, topicId, null)
               chooseMessage(id)
             }}
+            onUpdate={handleUpdate}
           />
         ))
       )}

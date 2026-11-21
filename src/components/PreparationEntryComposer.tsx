@@ -9,12 +9,16 @@ type PreparationEntryComposerProps = {
   }
   onSave: (input: { title: string | null; content: string }) => Promise<void>
   onStateChange: (state: { dirty: boolean; saving: boolean }) => void
+  onCancel?: () => void
+  mode?: 'create' | 'edit'
 }
 
 export function PreparationEntryComposer({
   initialValue,
   onSave,
   onStateChange,
+  onCancel,
+  mode = 'create',
 }: PreparationEntryComposerProps) {
   const { t } = useTranslation()
   const id = useId()
@@ -22,8 +26,15 @@ export function PreparationEntryComposer({
   const [content, setContent] = useState(initialValue?.content ?? '')
   const [saving, setSaving] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [initialFields] = useState(() => ({
+    title: initialValue?.title ?? '',
+    content: initialValue?.content ?? '',
+  }))
 
-  const dirty = title !== '' || content !== ''
+  const dirty =
+    mode === 'edit'
+      ? title !== initialFields.title || content !== initialFields.content
+      : title !== '' || content !== ''
 
   useEffect(() => {
     onStateChange({ dirty, saving })
@@ -105,7 +116,13 @@ export function PreparationEntryComposer({
           </p>
         )}
 
-        <div className='flex justify-end'>
+        <div className='flex justify-end gap-2'>
+          {onCancel && (
+            <Button type='button' variant='secondary' onClick={onCancel}>
+              {t('messages.cancel')}
+            </Button>
+          )}
+
           <Button type='submit' disabled={saving || !content.trim()}>
             {t(saving ? 'messages.saving' : 'messages.save')}
           </Button>

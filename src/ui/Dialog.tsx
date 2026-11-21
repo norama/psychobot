@@ -7,9 +7,16 @@ type DialogProps = {
   children: ReactNode
   onClose: () => void
   dismissible?: boolean
+  showCloseButton?: boolean
 }
 
-export function Dialog({ title, children, onClose, dismissible = true }: DialogProps) {
+export function Dialog({
+  title,
+  children,
+  onClose,
+  dismissible = true,
+  showCloseButton = true,
+}: DialogProps) {
   const { t } = useTranslation()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -36,9 +43,11 @@ export function Dialog({ title, children, onClose, dismissible = true }: DialogP
           {title}
         </h2>
 
-        <Button type='button' variant='secondary' disabled={!dismissible} onClick={onClose}>
-          {t('common.close')}
-        </Button>
+        {showCloseButton && (
+          <Button type='button' variant='secondary' disabled={!dismissible} onClick={onClose}>
+            {t('common.close')}
+          </Button>
+        )}
       </div>
 
       {children}
