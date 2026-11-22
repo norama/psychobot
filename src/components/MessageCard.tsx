@@ -4,6 +4,7 @@ import { DeleteIcon } from '@/ui/icons/DeleteIcon'
 import { EditIcon } from '@/ui/icons/EditIcon'
 import { LockIcon } from '@/ui/icons/LockIcon'
 import { SummaryIcon } from '@/ui/icons/SummaryIcon'
+import { MarkdownContent } from '@/ui/MarkdownContent'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeleteMessageDialog } from './DeleteMessageDialog'
@@ -58,34 +59,43 @@ function MessagePreview({ message, isOwn, isSummary, selected, onSelect }: Messa
         ? 'final'
         : 'draft'
 
+  function selectMessage() {
+    if (window.getSelection()?.toString()) return
+    if (!selected) onSelect()
+  }
+
   return (
-    <button
-      type='button'
-      aria-pressed={selected}
-      onClick={() => {
-        if (window.getSelection()?.toString()) return
-        if (!selected) onSelect()
-      }}
-      className='block w-full cursor-pointer rounded-2xl px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700'>
-      <span className='mb-2 flex items-center gap-2 text-xs font-medium text-brand-700'>
-        {isSummary && (
-          <>
-            <SummaryIcon />
-            <span className='sr-only'>{t('messages.summary')}</span>
-          </>
-        )}
-        {t(`messages.status.${statusKey}`)}
-      </span>
+    <div
+      className='cursor-pointer px-4 py-3'
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest('a, button, input')) {
+          return
+        }
 
-      {message.title && <span className='block break-words font-semibold'>{message.title}</span>}
+        selectMessage()
+      }}>
+      <button
+        type='button'
+        aria-pressed={selected}
+        onClick={selectMessage}
+        className='block w-full cursor-pointer rounded text-left'>
+        <span className='mb-2 flex items-center gap-2 text-xs font-medium text-brand-700'>
+          {isSummary && (
+            <>
+              <SummaryIcon />
+              <span className='sr-only'>{t('messages.summary')}</span>
+            </>
+          )}
+          {t(`messages.status.${statusKey}`)}
+        </span>
 
-      <span
-        className={
-          collapsed ? 'line-clamp-2 break-words' : 'block whitespace-pre-wrap break-words'
-        }>
-        {message.content}
-      </span>
-    </button>
+        {message.title && <span className='block break-words font-semibold'>{message.title}</span>}
+      </button>
+
+      <div className={collapsed ? 'line-clamp-2' : undefined}>
+        <MarkdownContent>{message.content}</MarkdownContent>
+      </div>
+    </div>
   )
 }
 

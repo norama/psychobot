@@ -1,4 +1,5 @@
 import { getSharedMessage } from '@/db/topicMessages'
+import { MarkdownContent } from '@/ui/MarkdownContent'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
@@ -78,7 +79,7 @@ export function MessageScreen() {
           <h2 className='mb-3 break-words text-lg font-semibold'>{message.title}</h2>
         )}
 
-        <div className='whitespace-pre-wrap break-words'>{message.content}</div>
+        <MarkdownContent>{message.content}</MarkdownContent>
 
         <time dateTime={displayDate} className='mt-4 block text-xs text-brand-700'>
           {formatter.format(new Date(displayDate))}
