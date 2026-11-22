@@ -2,7 +2,7 @@ import type { TopicMessageInput } from '@/db/topicMessages'
 import { Button } from '@/ui/Button'
 import { Dialog } from '@/ui/Dialog'
 import type { MessageTree } from '@/util/messageTree'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MessageCard } from './MessageCard'
 
@@ -53,28 +53,56 @@ function MessageView(props: MessageViewProps) {
   const children = tree.childrenById.get(messageId)!
   const open = expanded.has(messageId) || ancestors.has(messageId)
 
+  const cardRef = useRef<HTMLDivElement>(null)
+  const selectedByClickRef = useRef(false)
+  const selected = messageId === selectedMessageId
+
+  useEffect(() => {
+    if (!selected) return
+
+    if (selectedByClickRef.current) {
+      selectedByClickRef.current = false
+      return
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({
+        behavior: 'auto',
+        block: 'center',
+        inline: 'nearest',
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [selected])
+
   return (
     <li className='min-w-0'>
-      <MessageCard
-        message={message}
-        isOwn={message.created_by === userId}
-        isSummary={children.length > 0}
-        selected={messageId === selectedMessageId}
-        onSelect={() => onSelect(messageId)}
-        editing={editingMessageId === messageId}
-        editDisabled={editingMessageId !== null}
-        isSource={tree.parentById.has(messageId)}
-        onEdit={() => onEdit(messageId)}
-        onDelete={() => onDelete(messageId)}
-        onCancel={onCancelEdit}
-        onSave={async (input) => {
-          await onUpdate(messageId, input)
-          onEdit(null)
-        }}
-        onEditorStateChange={onEditorStateChange}
-        onSend={onSend ? () => onSend(messageId) : undefined}
-        sendDisabled={sendDisabled}
-      />
+      <div ref={cardRef}>
+        <MessageCard
+          message={message}
+          isOwn={message.created_by === userId}
+          isSummary={children.length > 0}
+          selected={selected}
+          onSelect={() => {
+            selectedByClickRef.current = true
+            onSelect(messageId)
+          }}
+          editing={editingMessageId === messageId}
+          editDisabled={editingMessageId !== null}
+          isSource={tree.parentById.has(messageId)}
+          onEdit={() => onEdit(messageId)}
+          onDelete={() => onDelete(messageId)}
+          onCancel={onCancelEdit}
+          onSave={async (input) => {
+            await onUpdate(messageId, input)
+            onEdit(null)
+          }}
+          onEditorStateChange={onEditorStateChange}
+          onSend={onSend ? () => onSend(messageId) : undefined}
+          sendDisabled={sendDisabled}
+        />
+      </div>
 
       {children.length > 0 && (
         <>
