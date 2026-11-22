@@ -1,3 +1,5 @@
+import { CopyMessageLinkButton } from '@/components/CopyMessageLinkButton'
+import { MessageTimestamp } from '@/components/MessageTimestamp'
 import { getSharedMessage } from '@/db/topicMessages'
 import { MarkdownContent } from '@/ui/MarkdownContent'
 import { useEffect, useState } from 'react'
@@ -81,9 +83,11 @@ export function MessageScreen() {
 
         <MarkdownContent>{message.content}</MarkdownContent>
 
-        <time dateTime={displayDate} className='mt-4 block text-xs text-brand-700'>
-          {formatter.format(new Date(displayDate))}
-        </time>
+        <div className='mt-4 flex items-center justify-between gap-3'>
+          <MessageTimestamp message={message} />
+
+          <CopyMessageLinkButton message={message} />
+        </div>
       </article>
     </section>
   )

@@ -7,7 +7,9 @@ import { SummaryIcon } from '@/ui/icons/SummaryIcon'
 import { MarkdownContent } from '@/ui/MarkdownContent'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { CopyMessageLinkButton } from './CopyMessageLinkButton'
 import { DeleteMessageDialog } from './DeleteMessageDialog'
+import { MessageTimestamp } from './MessageTimestamp'
 import { PreparationEntryComposer } from './PreparationEntryComposer'
 
 type MessageCardProps = {
@@ -24,22 +26,6 @@ type MessageCardProps = {
   onCancel: () => void
   onSave: (input: TopicMessageInput) => Promise<void>
   onEditorStateChange: (state: { dirty: boolean; saving: boolean }) => void
-}
-
-function MessageTimestamp({ message }: { message: TopicMessage }) {
-  const { i18n } = useTranslation()
-  const displayDate = message.shared_at ?? message.created_at
-
-  const formatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
-
-  return (
-    <time dateTime={displayDate} className='text-xs text-brand-700'>
-      {formatter.format(new Date(displayDate))}
-    </time>
-  )
 }
 
 type MessagePreviewProps = Pick<
@@ -160,6 +146,7 @@ export function MessageCard({
             <MessageTimestamp message={message} />
 
             <div className='flex h-10 shrink-0 items-center gap-2'>
+              {message.status === 'shared' && <CopyMessageLinkButton message={message} />}
               {isOwn && message.status === 'draft' ? (
                 <div className={`flex gap-2 ${selected ? 'visible' : 'invisible'}`}>
                   <Button

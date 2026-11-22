@@ -149,7 +149,10 @@
     "deleteSourceHint": "Zpráva bude odstraněna i ze zdrojů navazujícího shrnutí. Text shrnutí zůstane beze změny.",
     "deleteFailed": "Zprávu se nepodařilo smazat. Zkuste to znovu.",
     "locked": "Zpráva je uzamčena",
-    "openingLink": "Otevírání zprávy…"
+    "openingLink": "Otevírání zprávy…",
+    "copyLink": "Kopírovat odkaz",
+    "linkCopied": "Odkaz zkopírován.",
+    "copyLinkFailed": "Odkaz se nepodařilo zkopírovat."
   },
   "user": {
     "menuLabel": "Účet"
