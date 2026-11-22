@@ -14,6 +14,7 @@ type MessageTreeViewProps = {
   onUpdate: (messageId: string, input: TopicMessageInput) => Promise<void>
   onDelete: (messageId: string) => Promise<void>
   onSend?: (messageId: string) => Promise<void>
+  onWriteMessage: () => void
   sendDisabled?: boolean
 }
 
@@ -140,6 +141,7 @@ export function MessageTreeView({
   onUpdate,
   onDelete,
   onSend,
+  onWriteMessage,
   sendDisabled = false,
 }: MessageTreeViewProps) {
   const { t } = useTranslation()
@@ -213,19 +215,27 @@ export function MessageTreeView({
 
   return (
     <div className='mt-6'>
-      <Button
-        type='button'
-        variant='secondary'
-        className='mb-4'
-        disabled={atOverview}
-        onClick={() =>
-          requestCloseEditor(() => {
-            setExpanded(new Set())
-            onSelect(null)
-          })
-        }>
-        {t('messages.overview')}
-      </Button>
+      <div className='mb-4 flex flex-wrap items-center gap-4'>
+        <Button
+          type='button'
+          variant='secondary'
+          disabled={atOverview}
+          onClick={() =>
+            requestCloseEditor(() => {
+              setExpanded(new Set())
+              onSelect(null)
+            })
+          }>
+          {t('messages.overview')}
+        </Button>
+
+        <button
+          type='button'
+          onClick={onWriteMessage}
+          className='cursor-pointer rounded text-brand-700 underline decoration-brand-300 underline-offset-4 hover:text-brand-900 hover:decoration-brand-700'>
+          {t('messages.writeMessage')}
+        </button>
+      </div>
 
       {tree.rootIds.length === 0 && <p className='text-brand-700'>{t('messages.empty')}</p>}
 
@@ -248,6 +258,7 @@ export function MessageTreeView({
             onCancelEdit={() => requestCloseEditor(() => {})}
             onEditorStateChange={setEditorState}
             onSend={onSend}
+            onWriteMessage={onWriteMessage}
             sendDisabled={sendDisabled}
           />
         ))}

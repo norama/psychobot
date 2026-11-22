@@ -168,7 +168,8 @@
     "sentSuccessfully": "Zpráva byla odeslána.",
     "sentWithoutEmail": "Zpráva byla odeslána, ale e-mailové upozornění se nepodařilo odeslat.",
     "sendRefreshFailed": "Po pokusu o odeslání se nepodařilo obnovit stav zpráv. Před dalšími úpravami obnovte stránku.",
-    "openInNewTab": "Otevřít zprávu na nové kartě"
+    "openInNewTab": "Otevřít zprávu na nové kartě",
+    "writeMessage": "Napsat zprávu"
   },
   "user": {
     "menuLabel": "Účet"

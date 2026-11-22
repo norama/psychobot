@@ -85,6 +85,7 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
   const [choosingSources, setChoosingSources] = useState(false)
   const [summarySourceIds, setSummarySourceIds] = useState<string[] | null>(null)
   const pendingSummaryIdRef = useRef<string | null>(null)
+  const composerRef = useRef<HTMLDivElement>(null)
 
   const tree = useMemo(
     () => (state.status === 'ready' ? buildMessageTree(state.entries, state.sources) : null),
@@ -444,6 +445,12 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
               choosingSources ||
               summarySourceIds !== null
             }
+            onWriteMessage={() => {
+              composerRef.current?.scrollIntoView({
+                behavior: 'auto',
+                block: 'center',
+              })
+            }}
           />
         )
       )}
@@ -469,7 +476,9 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
               {t('messages.createSummary')}
             </Button>
           </div>
-          <PreparationEntryComposer onSave={handleSave} onStateChange={setComposerState} />
+          <div ref={composerRef}>
+            <PreparationEntryComposer onSave={handleSave} onStateChange={setComposerState} />
+          </div>
 
           {saved && (
             <p role='status' className='mt-3 text-sm text-brand-700'>
