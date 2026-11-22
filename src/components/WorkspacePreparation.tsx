@@ -20,10 +20,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MessageTreeView } from './MessageTreeView'
 import { PreparationEntryComposer } from './PreparationEntryComposer'
+import { SharedMessageList } from './SharedMessageList'
 import { SummaryDraftDialog } from './SummaryDraftDialog'
 import { SummarySourceDialog } from './SummarySourceDialog'
 
-type ClientPreparationProps = {
+type WorkspacePreparationProps = {
   topicId: string
   userId: string
 }
@@ -65,7 +66,7 @@ async function loadTopicMessages(
   return { entries, sources }
 }
 
-export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
+export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationProps) {
   const { t } = useTranslation()
   const { messageId, chooseMessage } = useMessageRoute()
   const [lastSavedMessageId, setLastSavedMessageId] = useState<string | null>(null)
@@ -326,6 +327,26 @@ export function ClientPreparation({ topicId, userId }: ClientPreparationProps) {
     <section className='mt-6'>
       <h3 className='text-lg font-semibold'>{t('messages.title')}</h3>
       <p className='mt-2 text-sm text-brand-700'>{t('messages.privacyHint')}</p>
+
+      {state.status === 'ready' && (
+        <div className='mt-4 grid grid-cols-1 items-start gap-3 md:grid-cols-2'>
+          <SharedMessageList
+            title={t('messages.received')}
+            emptyText={t('messages.noReceived')}
+            messages={state.entries.filter(
+              (message) => message.status === 'shared' && message.created_by !== userId,
+            )}
+          />
+
+          <SharedMessageList
+            title={t('messages.sent')}
+            emptyText={t('messages.noSent')}
+            messages={state.entries.filter(
+              (message) => message.status === 'shared' && message.created_by === userId,
+            )}
+          />
+        </div>
+      )}
 
       {state.status === 'loading' ? (
         <p role='status' className='mt-4'>

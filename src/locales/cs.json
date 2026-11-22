@@ -152,7 +152,13 @@
     "openingLink": "Otevírání zprávy…",
     "copyLink": "Kopírovat odkaz",
     "linkCopied": "Odkaz zkopírován.",
-    "copyLinkFailed": "Odkaz se nepodařilo zkopírovat."
+    "copyLinkFailed": "Odkaz se nepodařilo zkopírovat.",
+    "received": "Přijaté",
+    "sent": "Odeslané",
+    "search": "Hledat ve zprávách",
+    "noSearchResults": "Žádné zprávy neodpovídají hledání.",
+    "noReceived": "Zatím žádné přijaté zprávy.",
+    "noSent": "Zatím žádné odeslané zprávy."
   },
   "user": {
     "menuLabel": "Účet"

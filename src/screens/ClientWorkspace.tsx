@@ -1,4 +1,4 @@
-import { ClientPreparation } from '@/components/ClientPreparation'
+import { WorkspacePreparation } from '@/components/WorkspacePreparation'
 import { WorkspaceTopics } from '@/components/WorkspaceTopics'
 import type { useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
 import { ConnectionCard } from '@/ui/ConnectionCard'
@@ -44,7 +44,7 @@ export function ClientWorkspace({ workspace, themes, themeId, onChoose }: Client
       <WorkspaceTopics
         workspaceId={workspace.id}
         renderTopicContent={(topicId) => (
-          <ClientPreparation
+          <WorkspacePreparation
             key={`${workspace.client_id}:${topicId}`}
             topicId={topicId}
             userId={workspace.client_id}

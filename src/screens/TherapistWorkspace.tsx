@@ -1,3 +1,4 @@
+import { WorkspacePreparation } from '@/components/WorkspacePreparation'
 import { WorkspaceTopics } from '@/components/WorkspaceTopics'
 import type { useThemeCatalog, useWorkspaceTheme } from '@/db/theme'
 import { ConnectionCard } from '@/ui/ConnectionCard'
@@ -45,7 +46,16 @@ export function TherapistWorkspace({
           </Menu>
         )}
       </HeaderMenus>
-      <WorkspaceTopics workspaceId={workspace.id} />
+      <WorkspaceTopics
+        workspaceId={workspace.id}
+        renderTopicContent={(topicId) => (
+          <WorkspacePreparation
+            key={`${workspace.therapist_id}:${topicId}`}
+            topicId={topicId}
+            userId={workspace.therapist_id}
+          />
+        )}
+      />
     </>
   )
 }
