@@ -158,7 +158,17 @@
     "search": "Hledat ve zprávách",
     "noSearchResults": "Žádné zprávy neodpovídají hledání.",
     "noReceived": "Zatím žádné přijaté zprávy.",
-    "noSent": "Zatím žádné odeslané zprávy."
+    "noSent": "Zatím žádné odeslané zprávy.",
+    "send": "Odeslat",
+    "sending": "Odesílám…",
+    "sendTitle": "Odeslat zprávu?",
+    "sendHint": "Zpráva bude sdílena s druhým účastníkem. Po odeslání ji již nebude možné upravovat.",
+    "sendSourcesHint": "Uzamknou se také všechny její zdrojové zprávy, včetně zdrojů vnořených shrnutí. Zdroje se tímto neodesílají.",
+    "sendFailed": "Odeslání se nepodařilo potvrdit. Zpráva a její zdroje již mohou být uzamčené. Zkontrolujte jejich stav a zkuste to znovu.",
+    "sentSuccessfully": "Zpráva byla odeslána.",
+    "sentWithoutEmail": "Zpráva byla odeslána, ale e-mailové upozornění se nepodařilo odeslat.",
+    "sendRefreshFailed": "Po pokusu o odeslání se nepodařilo obnovit stav zpráv. Před dalšími úpravami obnovte stránku.",
+    "openInNewTab": "Otevřít zprávu na nové kartě"
   },
   "user": {
     "menuLabel": "Účet"

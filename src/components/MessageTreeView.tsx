@@ -13,6 +13,8 @@ type MessageTreeViewProps = {
   onSelect: (messageId: string | null) => void
   onUpdate: (messageId: string, input: TopicMessageInput) => Promise<void>
   onDelete: (messageId: string) => Promise<void>
+  onSend?: (messageId: string) => Promise<void>
+  sendDisabled?: boolean
 }
 
 type MessageViewProps = MessageTreeViewProps & {
@@ -42,6 +44,8 @@ function MessageView(props: MessageViewProps) {
     editingMessageId,
     onEdit,
     onEditorStateChange,
+    onSend,
+    sendDisabled = false,
   } = props
 
   const { t } = useTranslation()
@@ -68,6 +72,8 @@ function MessageView(props: MessageViewProps) {
           onEdit(null)
         }}
         onEditorStateChange={onEditorStateChange}
+        onSend={onSend ? () => onSend(messageId) : undefined}
+        sendDisabled={sendDisabled}
       />
 
       {children.length > 0 && (
@@ -88,17 +94,7 @@ function MessageView(props: MessageViewProps) {
           {open && (
             <ol className='mt-3 ml-3 space-y-4 border-l-2 border-brand-200 pl-3 md:ml-6 md:pl-4'>
               {children.map((childId) => (
-                <MessageView
-                  {...props}
-                  key={childId}
-                  messageId={childId}
-                  onUpdate={onUpdate}
-                  editingMessageId={editingMessageId}
-                  onEdit={onEdit}
-                  onCancelEdit={onCancelEdit}
-                  onEditorStateChange={onEditorStateChange}
-                  onDelete={onDelete}
-                />
+                <MessageView {...props} key={childId} messageId={childId} />
               ))}
             </ol>
           )}
@@ -115,6 +111,8 @@ export function MessageTreeView({
   onSelect,
   onUpdate,
   onDelete,
+  onSend,
+  sendDisabled = false,
 }: MessageTreeViewProps) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
@@ -219,6 +217,8 @@ export function MessageTreeView({
             onEdit={changeEditor}
             onCancelEdit={() => requestCloseEditor(() => {})}
             onEditorStateChange={setEditorState}
+            onSend={onSend}
+            sendDisabled={sendDisabled}
           />
         ))}
       </ol>

@@ -7,9 +7,13 @@ import { useTranslation } from 'react-i18next'
 
 type CopyMessageLinkButtonProps = {
   message: TopicMessage
+  variant?: 'secondary' | 'quiet'
 }
 
-export function CopyMessageLinkButton({ message }: CopyMessageLinkButtonProps) {
+export function CopyMessageLinkButton({
+  message,
+  variant = 'secondary',
+}: CopyMessageLinkButtonProps) {
   const { t } = useTranslation()
   const [status, setStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle')
 
@@ -49,7 +53,7 @@ export function CopyMessageLinkButton({ message }: CopyMessageLinkButtonProps) {
     <div className='relative inline-flex'>
       <Button
         type='button'
-        variant='secondary'
+        variant={variant}
         className='inline-flex h-10 w-10 items-center justify-center p-2'
         title={t('messages.copyLink')}
         aria-label={t('messages.copyLink')}

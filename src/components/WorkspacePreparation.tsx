@@ -7,6 +7,7 @@ import {
   createTopicMessage,
   deleteTopicMessage,
   getTopicMessages,
+  shareTopicMessage,
   updateTopicMessage,
   type TopicMessage,
   type TopicMessageInput,
@@ -73,8 +74,11 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
   const [state, setState] = useState<EntriesState>({ status: 'loading' })
   const [saved, setSaved] = useState(false)
   const [composerState, setComposerState] = useState({
+    dirty: false,
     saving: false,
   })
+  const [sendNotice, setSendNotice] = useState<string | null>(null)
+  const [sendRefreshFailed, setSendRefreshFailed] = useState(false)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
   const selectionRestoredRef = useRef(false)
@@ -301,6 +305,65 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
     }
   }
 
+  async function handleSend(id: string) {
+    const controller = controllerRef.current
+    const message =
+      state.status === 'ready' ? state.entries.find((entry) => entry.id === id) : undefined
+
+    if (
+      !controller ||
+      controller.signal.aborted ||
+      tree === null ||
+      message?.created_by !== userId ||
+      message.status === 'shared' ||
+      composerState.dirty ||
+      composerState.saving ||
+      choosingSources ||
+      summarySourceIds !== null ||
+      pendingSummaryIdRef.current !== null
+    ) {
+      throw new Error('Message is not ready to send')
+    }
+
+    setSaved(false)
+    setSendNotice(null)
+    setSendRefreshFailed(false)
+
+    let result: Awaited<ReturnType<typeof shareTopicMessage>> = null
+
+    try {
+      result = await shareTopicMessage(id)
+    } finally {
+      // Even a failed send may have frozen the message and its sources.
+      if (!controller.signal.aborted) {
+        try {
+          const { entries, sources } = await loadTopicMessages(topicId, controller.signal)
+          if (!controller.signal.aborted) {
+            setState({ status: 'ready', entries, sources })
+          }
+        } catch (error) {
+          if (!controller.signal.aborted) {
+            console.error('Failed to refresh messages after sending', error)
+            setSendRefreshFailed(true)
+            setState({ status: 'error' })
+          }
+        }
+      }
+    }
+
+    if (controller.signal.aborted) return
+
+    if (!result?.shared) {
+      throw new Error('Message sharing was not confirmed')
+    }
+
+    setSendNotice(
+      result.emailSubmitted === false
+        ? t('messages.sentWithoutEmail')
+        : t('messages.sentSuccessfully'),
+    )
+  }
+
   async function handleCancelSummary() {
     const pendingId = pendingSummaryIdRef.current
 
@@ -316,7 +379,7 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
     state.status === 'loading'
       ? null
       : state.status === 'error'
-        ? t('messages.loadFailed')
+        ? t(sendRefreshFailed ? 'messages.sendRefreshFailed' : 'messages.loadFailed')
         : tree === null
           ? t('messages.invalidTree')
           : messageUnavailable
@@ -327,6 +390,12 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
     <section className='mt-6'>
       <h3 className='text-lg font-semibold'>{t('messages.title')}</h3>
       <p className='mt-2 text-sm text-brand-700'>{t('messages.privacyHint')}</p>
+
+      {sendNotice && (
+        <p role='status' className='mt-3 text-sm text-brand-700'>
+          {sendNotice}
+        </p>
+      )}
 
       {state.status === 'ready' && (
         <div className='mt-4 grid grid-cols-1 items-start gap-3 md:grid-cols-2'>
@@ -371,6 +440,13 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
             }}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
+            onSend={handleSend}
+            sendDisabled={
+              composerState.dirty ||
+              composerState.saving ||
+              choosingSources ||
+              summarySourceIds !== null
+            }
           />
         ))
       )}
