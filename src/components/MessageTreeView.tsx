@@ -92,7 +92,7 @@ function MessageView(props: MessageViewProps) {
           </div>
 
           {open && (
-            <ol className='mt-3 ml-3 space-y-4 border-l-2 border-brand-200 pl-3 md:ml-6 md:pl-4'>
+            <ol className='mt-3 space-y-4 border-l-2 border-brand-200 pl-4 md:ml-[8%] md:pl-0'>
               {children.map((childId) => (
                 <MessageView {...props} key={childId} messageId={childId} />
               ))}
@@ -198,6 +198,8 @@ export function MessageTreeView({
         }>
         {t('messages.overview')}
       </Button>
+
+      {tree.rootIds.length === 0 && <p className='text-brand-700'>{t('messages.empty')}</p>}
 
       <ol className='space-y-4'>
         {tree.rootIds.map((id) => (

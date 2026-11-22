@@ -139,7 +139,7 @@ export function MessageCard({
 
   return (
     <div
-      className={`w-full max-w-full rounded-2xl border transition-colors md:max-w-[85%] ${
+      className={`w-full max-w-full rounded-2xl border transition-colors md:max-w-[92%] ${
         isOwn ? 'ml-auto' : 'mr-auto border-l-4 border-l-brand-500 hover:border-l-brand-700'
       } ${
         selected

@@ -426,10 +426,7 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
           {errorMessage}
         </p>
       ) : (
-        tree !== null &&
-        (tree.rootIds.length === 0 ? (
-          <p className='mt-4 text-brand-700'>{t('messages.empty')}</p>
-        ) : (
+        tree !== null && (
           <MessageTreeView
             tree={tree}
             userId={userId}
@@ -448,11 +445,11 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
               summarySourceIds !== null
             }
           />
-        ))
+        )
       )}
 
       {state.status === 'ready' && tree !== null && !messageUnavailable && (
-        <>
+        <div className='ml-auto w-full md:max-w-[92%]'>
           <div className='mt-6'>
             <Button
               type='button'
@@ -485,7 +482,7 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
               {t('messages.refreshFailed')}
             </p>
           )}
-        </>
+        </div>
       )}
       {choosingSources && tree !== null && (
         <SummarySourceDialog
