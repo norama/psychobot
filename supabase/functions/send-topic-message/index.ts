@@ -37,6 +37,8 @@ type MessageLookup = {
   id: string;
   status: "draft" | "final" | "shared";
   topic: {
+    id: string;
+    workspace_id: string;
     title: string;
     workspace: {
       therapist_id: string;
@@ -80,6 +82,8 @@ export default {
         id,
         status,
         topic:topics!inner(
+          id,
+          workspace_id,
           title,
           workspace:workspaces!inner(
             therapist_id,
@@ -145,6 +149,34 @@ export default {
 
     const recipientEmail = recipient.email;
 
+    const appBaseUrl = Deno.env.get("APP_BASE_URL")?.trim();
+
+    let messageUrl: URL;
+    let workspaceUrl: URL;
+
+    const recipientRole = recipientId === workspace.therapist_id
+      ? "therapist"
+      : "client";
+
+    try {
+      if (!appBaseUrl) throw new Error("Missing APP_BASE_URL");
+
+      messageUrl = new URL(
+        `/message/${encodeURIComponent(messageId)}`,
+        appBaseUrl,
+      );
+
+      workspaceUrl = new URL(`/${recipientRole}`, appBaseUrl);
+      workspaceUrl.searchParams.set("workspace", message.topic.workspace_id);
+      workspaceUrl.searchParams.set("topic", message.topic.id);
+      workspaceUrl.searchParams.set("message", messageId);
+    } catch {
+      return jsonResponse(
+        { message: "Chybí platná konfigurace adresy aplikace." },
+        500,
+      );
+    }
+
     // Freeze the selected message and all its recursive sources
     const { error: finalizeMessageError } = await ctx.supabase.rpc(
       "finalize_topic_message",
@@ -167,7 +199,15 @@ export default {
       const emailResponse = await sendEmail(
         recipientEmail,
         `PsychoBot nová zpráva: ${title}`,
-        `Byla vám zaslána nová zpráva od ${user.email} v tématu "${title}".`,
+        `Byla vám zaslána nová zpráva od ${user.email} v tématu "${title}".
+
+Otevřít zprávu:
+${messageUrl.toString()}
+
+Otevřít v pracovním prostoru:
+${workspaceUrl.toString()}
+
+Přihlaste se účtem Google s adresou ${recipientEmail}.`,
       );
 
       if (!emailResponse.ok) {
