@@ -42,7 +42,7 @@ type MessagePreviewProps = Pick<
 
 function MessagePreview({ message, isOwn, isSummary, selected, onSelect }: MessagePreviewProps) {
   const { t } = useTranslation()
-  const collapsed = !isOwn && !selected
+  const collapsed = !selected
   const unread = !isOwn && message.status === 'shared' && message.read_at === null
 
   const statusKey = !isOwn

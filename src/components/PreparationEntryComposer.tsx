@@ -106,7 +106,7 @@ export function PreparationEntryComposer({
             required
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            className={fieldClass}
+            className={`${fieldClass} field-sizing-content min-h-32 max-h-[60vh] resize-y overflow-y-auto`}
           />
         </div>
 
