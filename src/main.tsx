@@ -114,7 +114,7 @@ function AuthenticatedApp({
       {error && <p role='alert'>{error}</p>}
       {session ? (
         isMessageRoute ? (
-          <MessageScreen key={`${session.user.id}:${location.pathname}`} />
+          <MessageScreen key={`${session.user.id}:${location.pathname}`} userId={session.user.id} />
         ) : isInvitationRoute ? (
           <InviteScreen
             key={`${session.user.id}:${session.user.email ?? ''}:${invitationToken}`}

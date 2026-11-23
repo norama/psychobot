@@ -1,18 +1,21 @@
 import type { TopicMessage } from '@/db/topicMessages'
 import { AppLink } from '@/ui/AppLink'
+import { Badge } from '@/ui/Badge'
 import { getMessageUrl } from '@/util/messageUrl'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CopyMessageLinkButton } from './CopyMessageLinkButton'
 import { MessageTimestamp } from './MessageTimestamp'
+import { OpenMessageInNewTab } from './OpenMessageInNewTab'
 
 type SharedMessageListProps = {
   title: string
   emptyText: string
   messages: TopicMessage[]
+  isOwn: boolean
 }
 
-export function SharedMessageList({ title, emptyText, messages }: SharedMessageListProps) {
+export function SharedMessageList({ title, emptyText, messages, isOwn }: SharedMessageListProps) {
   const { t } = useTranslation()
   const searchId = useId()
   const [search, setSearch] = useState('')
@@ -66,20 +69,30 @@ export function SharedMessageList({ title, emptyText, messages }: SharedMessageL
                   <li key={message.id} className='rounded-lg border border-brand-200 bg-white p-3'>
                     <div className='flex items-start justify-between gap-3'>
                       <div className='min-w-0 flex-1'>
-                        <AppLink
-                          to={getMessageUrl(message.id)}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='break-words font-medium'>
-                          {message.title || t('messages.untitled')}
-                        </AppLink>
+                        <div className='flex flex-wrap items-center gap-2'>
+                          <AppLink
+                            to={getMessageUrl(message.id)}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='break-words font-medium'>
+                            {message.title || t('messages.untitled')}
+                          </AppLink>
+
+                          {!isOwn && message.read_at === null && (
+                            <Badge>{t('messages.unread')}</Badge>
+                          )}
+                        </div>
 
                         <div className='mt-1'>
-                          <MessageTimestamp message={message} />
+                          <MessageTimestamp message={message} showReadReceipt={isOwn} />
                         </div>
                       </div>
 
-                      <CopyMessageLinkButton message={message} />
+                      {!isOwn && message.read_at === null ? (
+                        <OpenMessageInNewTab messageId={message.id} />
+                      ) : (
+                        <CopyMessageLinkButton message={message} variant='quiet' />
+                      )}
                     </div>
                   </li>
                 ))}

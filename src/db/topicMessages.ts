@@ -14,6 +14,7 @@ export type TopicMessage = {
   created_at: string;
   updated_at: string;
   shared_at: string | null;
+  read_at: string | null;
 };
 
 export type TopicMessageInput = {
@@ -29,7 +30,7 @@ export async function getTopicMessages(
   const query = db
     .from("topic_messages")
     .select(
-      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at",
+      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at, read_at",
     )
     .eq("topic_id", topicId)
     .order("created_at", { ascending: true })
@@ -53,7 +54,7 @@ export async function getTopicMessage(
   const query = db
     .from("topic_messages")
     .select(
-      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at",
+      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at, read_at",
     )
     .eq("topic_id", topicId)
     .eq("id", messageId)
@@ -70,6 +71,29 @@ export async function getTopicMessage(
   return data?.[0] ?? null;
 }
 
+export type MessageReadReceipt = Pick<TopicMessage, "id" | "read_at">;
+
+export async function getTopicMessageReadReceipts(
+  topicId: string,
+  signal?: AbortSignal,
+): Promise<MessageReadReceipt[] | null> {
+  const query = db
+    .from("topic_messages")
+    .select("id, read_at")
+    .eq("topic_id", topicId)
+    .eq("status", "shared");
+
+  if (signal) query.abortSignal(signal);
+
+  const { data, error } = await query.overrideTypes<
+    MessageReadReceipt[],
+    { merge: false }
+  >();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getSharedMessage(
   messageId: string,
   signal?: AbortSignal,
@@ -77,7 +101,7 @@ export async function getSharedMessage(
   const messageQuery = db
     .from("topic_messages")
     .select(
-      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at",
+      "id, topic_id, title, content, status, created_by, created_at, updated_at, shared_at, read_at",
     )
     .eq("id", messageId)
     .eq("status", "shared");
@@ -152,6 +176,22 @@ export async function deleteTopicMessage(messageId: string): Promise<void> {
   });
 
   if (error) throw error;
+}
+
+export async function markTopicMessageRead(
+  messageId: string,
+): Promise<string> {
+  const { data, error } = await db.rpc("mark_topic_message_read", {
+    p_message_id: messageId,
+  });
+
+  if (error) throw error;
+
+  if (typeof data !== "string") {
+    throw new Error("Missing message read timestamp");
+  }
+
+  return data;
 }
 
 type ShareTopicMessageResult = {

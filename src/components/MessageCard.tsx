@@ -1,19 +1,19 @@
 import type { TopicMessage, TopicMessageInput } from '@/db/topicMessages'
-import { Button, buttonClassName } from '@/ui/Button'
+import { Badge } from '@/ui/Badge'
+import { Button } from '@/ui/Button'
 import { DeleteIcon } from '@/ui/icons/DeleteIcon'
 import { EditIcon } from '@/ui/icons/EditIcon'
 import { LockIcon } from '@/ui/icons/LockIcon'
-import { OpenInNewTabIcon } from '@/ui/icons/OpenInNewTabIcon'
 import { ReceivedIcon } from '@/ui/icons/ReceivedIcon'
 import { SendIcon } from '@/ui/icons/SendIcon'
 import { SummaryIcon } from '@/ui/icons/SummaryIcon'
 import { MarkdownContent } from '@/ui/MarkdownContent'
-import { getMessageUrl } from '@/util/messageUrl'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CopyMessageLinkButton } from './CopyMessageLinkButton'
 import { DeleteMessageDialog } from './DeleteMessageDialog'
 import { MessageTimestamp } from './MessageTimestamp'
+import { OpenMessageInNewTab } from './OpenMessageInNewTab'
 import { PreparationEntryComposer } from './PreparationEntryComposer'
 import { SendMessageDialog } from './SendMessageDialog'
 
@@ -43,6 +43,7 @@ type MessagePreviewProps = Pick<
 function MessagePreview({ message, isOwn, isSummary, selected, onSelect }: MessagePreviewProps) {
   const { t } = useTranslation()
   const collapsed = !isOwn && !selected
+  const unread = !isOwn && message.status === 'shared' && message.read_at === null
 
   const statusKey = !isOwn
     ? 'received'
@@ -73,7 +74,7 @@ function MessagePreview({ message, isOwn, isSummary, selected, onSelect }: Messa
           aria-pressed={selected}
           onClick={selectMessage}
           className='min-w-0 flex-1 cursor-pointer rounded text-left'>
-          <span className='flex items-center gap-2 text-xs font-medium text-brand-700'>
+          <span className='flex flex-wrap items-center gap-2 text-xs font-medium text-brand-700'>
             {!isOwn ? <ReceivedIcon /> : message.status === 'shared' ? <SendIcon /> : null}
 
             {isSummary && (
@@ -84,24 +85,13 @@ function MessagePreview({ message, isOwn, isSummary, selected, onSelect }: Messa
             )}
 
             {t(`messages.status.${statusKey}`)}
+            {unread && <Badge>{t('messages.unread')}</Badge>}
           </span>
         </button>
 
         {message.status === 'shared' && (
           <div className='flex shrink-0 items-center gap-2'>
-            <a
-              href={getMessageUrl(message.id)}
-              target='_blank'
-              rel='noopener noreferrer'
-              title={t('messages.openInNewTab')}
-              aria-label={t('messages.openInNewTab')}
-              className={buttonClassName(
-                'quiet',
-                'inline-flex h-10 w-10 items-center justify-center p-2',
-              )}>
-              <OpenInNewTabIcon />
-            </a>
-
+            <OpenMessageInNewTab messageId={message.id} />
             <CopyMessageLinkButton message={message} variant='quiet' />
           </div>
         )}
@@ -177,7 +167,7 @@ export function MessageCard({
           />
 
           <div className='flex items-center justify-between gap-3 px-4 pb-3'>
-            <MessageTimestamp message={message} />
+            <MessageTimestamp message={message} showReadReceipt={isOwn} />
 
             <div className='flex h-10 shrink-0 items-center gap-2'>
               {isOwn && message.status !== 'shared' && (

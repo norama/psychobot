@@ -1,8 +1,11 @@
 import { CopyMessageLinkButton } from '@/components/CopyMessageLinkButton'
 import { MessageTimestamp } from '@/components/MessageTimestamp'
+import type { MessageReadReceipt } from '@/db/topicMessages'
 import { getSharedMessage } from '@/db/topicMessages'
 import { MarkdownContent } from '@/ui/MarkdownContent'
-import { useEffect, useState } from 'react'
+import { useMessageRead } from '@/util/useMessageRead'
+import { useMessageReadReceipts } from '@/util/useMessageReadReceipts'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 
@@ -14,7 +17,7 @@ type MessageState =
   | { status: 'error' }
   | { status: 'ready'; data: MessageData }
 
-export function MessageScreen() {
+export function MessageScreen({ userId }: { userId: string }) {
   const { t, i18n } = useTranslation()
   const { messageId } = useParams<{ messageId: string }>()
   const [state, setState] = useState<MessageState>({ status: 'loading' })
@@ -47,6 +50,52 @@ export function MessageScreen() {
     return () => controller.abort()
   }, [messageId])
 
+  const handleRead = useCallback((id: string, readAt: string) => {
+    setState((current) => {
+      if (
+        current.status !== 'ready' ||
+        current.data.message.id !== id ||
+        current.data.message.read_at !== null
+      ) {
+        return current
+      }
+
+      return {
+        ...current,
+        data: {
+          ...current.data,
+          message: {
+            ...current.data.message,
+            read_at: current.data.message.read_at ?? readAt,
+          },
+        },
+      }
+    })
+  }, [])
+
+  useMessageRead(
+    state.status === 'ready' && state.data.message.id === messageId ? state.data.message : null,
+    userId,
+    handleRead,
+  )
+
+  const handleRefreshReadReceipts = useCallback(
+    (receipts: MessageReadReceipt[]) => {
+      const receipt = receipts.find((item) => item.id === messageId)
+
+      if (receipt?.read_at) {
+        handleRead(receipt.id, receipt.read_at)
+      }
+    },
+    [messageId, handleRead],
+  )
+
+  useMessageReadReceipts(
+    state.status === 'ready' ? state.data.message.topic_id : null,
+    userId,
+    handleRefreshReadReceipts,
+  )
+
   if (state.status !== 'ready') {
     return (
       <p role={state.status === 'loading' ? 'status' : 'alert'} className='p-6'>
@@ -62,11 +111,6 @@ export function MessageScreen() {
   }
 
   const { message, topic } = state.data
-  const displayDate = message.shared_at ?? message.created_at
-  const formatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
 
   return (
     <section className='p-4 pt-0'>
@@ -84,7 +128,7 @@ export function MessageScreen() {
         <MarkdownContent>{message.content}</MarkdownContent>
 
         <div className='mt-4 flex items-center justify-between gap-3'>
-          <MessageTimestamp message={message} />
+          <MessageTimestamp message={message} showReadReceipt={message.created_by === userId} />
 
           <CopyMessageLinkButton message={message} />
         </div>

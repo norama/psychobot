@@ -9,6 +9,7 @@ import {
   getTopicMessages,
   shareTopicMessage,
   updateTopicMessage,
+  type MessageReadReceipt,
   type TopicMessage,
   type TopicMessageInput,
 } from '@/db/topicMessages'
@@ -16,8 +17,10 @@ import { Button } from '@/ui/Button'
 import { SummaryIcon } from '@/ui/icons/SummaryIcon'
 import { getStoredMessage, storeMessage } from '@/util/messagePreference'
 import { buildMessageTree } from '@/util/messageTree'
+import { useMessageRead } from '@/util/useMessageRead'
+import { useMessageReadReceipts } from '@/util/useMessageReadReceipts'
 import { useMessageRoute } from '@/util/useMessageRoute'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MessageTreeView } from './MessageTreeView'
 import { PreparationEntryComposer } from './PreparationEntryComposer'
@@ -131,6 +134,49 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
     messageId !== null &&
     !selectedEntry &&
     lastSavedMessageId !== messageId
+
+  const handleRead = useCallback((id: string, readAt: string) => {
+    setState((current) => {
+      if (current.status !== 'ready') return current
+
+      return {
+        ...current,
+        entries: current.entries.map((entry) =>
+          entry.id === id ? { ...entry, read_at: entry.read_at ?? readAt } : entry,
+        ),
+      }
+    })
+  }, [])
+
+  useMessageRead(tree !== null && !messageUnavailable ? selectedEntry : null, userId, handleRead)
+
+  const handleRefreshReadReceipts = useCallback((receipts: MessageReadReceipt[]) => {
+    setState((current) => {
+      if (current.status !== 'ready') return current
+
+      const receiptsById = new Map(receipts.map((receipt) => [receipt.id, receipt.read_at]))
+
+      let changed = false
+
+      const entries = current.entries.map((entry) => {
+        const readAt = receiptsById.get(entry.id)
+
+        // A recorded first-display timestamp never needs replacing.
+        if (entry.read_at !== null || !readAt) return entry
+
+        changed = true
+        return { ...entry, read_at: readAt }
+      })
+
+      return changed ? { ...current, entries } : current
+    })
+  }, [])
+
+  useMessageReadReceipts(
+    state.status === 'ready' ? topicId : null,
+    userId,
+    handleRefreshReadReceipts,
+  )
 
   useEffect(() => {
     if (state.status !== 'ready' || selectionRestoredRef.current) return
@@ -406,6 +452,7 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
             messages={state.entries.filter(
               (message) => message.status === 'shared' && message.created_by !== userId,
             )}
+            isOwn={false}
           />
 
           <SharedMessageList
@@ -414,6 +461,7 @@ export function WorkspacePreparation({ topicId, userId }: WorkspacePreparationPr
             messages={state.entries.filter(
               (message) => message.status === 'shared' && message.created_by === userId,
             )}
+            isOwn={true}
           />
         </div>
       )}
