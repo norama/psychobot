@@ -1,61 +1,232 @@
-# PsychoBot development demo
+# PsychoBot
 
-React, TypeScript, Vite, and Supabase. The app uses simple Czech labels and fictional profile names.
+**[Open the deployed demo](https://psychobot-demo.fly.dev/)**
 
-## Plan for Friday, 20 November 2026
+PsychoBot is a prototype for communication and preparation between a therapist
+and a client. The interface is currently in Czech.
 
-| Target | Deliverable | Done when |
-| --- | --- | --- |
-| 4 November | Google sign-in and one manually paired workspace | Both accounts see the same connection after reload. A signed-in outsider cannot open its URL. |
-| By 13 November | Two-way text messages in that workspace | The client sends one message, the therapist replies, and both can reload the thread. The database enforces membership and the sender identity. |
-| 16–19 November | Rehearsal and fixes | Run the script with four browser profiles. Confirm the demo URL, Google redirects, and workspace permissions. |
-| 20 November | Demo with Tereza | Show one fictional case from both sides. |
+**Use fictional content only. Do not enter real client information.
+AI is not integrated yet; notes, messages, and summaries are written manually.**
 
-Manual pairing is sufficient for this demo. Therapist invitations and client acceptance can create the same workspace row in a later milestone.
+## Current capabilities
 
-Use Supabase Auth and Postgres for sign-in, membership, and messaging. Add server-side code when provider secrets, model context selection, or private streaming enter the workflow. FastAPI makes sense when the AI workflow benefits from Python libraries, independent jobs, or its own service lifecycle. Before real-client AI use, agree on responsibility and how to handle risky situations. Keep private conversations separate from the shared workspace.
+- Google sign-in and sign-out.
+- Therapist invitations and client acceptance.
+- Protected workspaces with one therapist and one client.
+- Shared topics and messaging in both directions.
+- Private drafts, editing, deletion, and nested summaries.
+- Finalization that freezes summaries and their source messages.
+- Received/Sent lists, Markdown rendering, and copied message links.
+- Standalone shared-message pages.
+- E-mail notifications with direct-message and workspace-context links.
+- Unread indicators and sender-visible “Zobrazeno” read timestamps.
+- Receipt refresh when returning to a browser tab.
 
-## 1. Configure a development Supabase project
+Roles belong to individual workspaces. One account can be a therapist in one
+workspace and a client in another.
 
-1. Create a separate development project in the [Supabase Dashboard](https://supabase.com/dashboard). In its SQL Editor, run each file in [supabase/migrations](supabase/migrations) once, in filename order.
-2. In **Authentication → URL Configuration**, set **Site URL** to `http://localhost:5173/` and add that exact URL to **Redirect URLs**. Open the app at that same origin throughout testing.
-3. In the Google Auth Platform, configure the consent screen and use **External / Testing** if your accounts are outside a shared Google Workspace. Add all four Google test accounts to the test audience. Under **Data Access**, check the `openid`, `userinfo.email`, and `userinfo.profile` scopes. Create a **Web application** OAuth client and add `http://localhost:5173` under **Authorized JavaScript origins**. Add the exact callback URL displayed by Supabase's Google provider settings as a Google **Authorized redirect URI**. It normally has the form `https://<project-ref>.supabase.co/auth/v1/callback`. The localhost URL belongs in Supabase, and the Supabase callback belongs in Google.
-4. Enable Google under **Authentication → Sign In / Providers** in Supabase. Put the Google OAuth client ID and secret there.
-5. Find the Supabase project URL and its `sb_publishable_…` key. You’ll put both public values in `.env.local` in the next step. Keep the Google client secret and Supabase secret keys in their server-side settings.
+Private drafts and source notes are visible only to their author. Sharing a
+summary does not automatically share its source messages. Shared messages are
+available only to the workspace participants; knowing a link does not grant
+access.
 
-[Google sign-in setup](https://supabase.com/docs/guides/auth/social-sign-in/auth-google) · [Supabase redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
+## Try the demo
 
-## 2. Start the app and pair the accounts
+Use two distinct Google accounts. Separate browser profiles make it easier
+to keep both participants signed in. Each participant can use their own
+Google account; shared account credentials are unnecessary.
 
-Use Node 24 or newer.
+1. Open [the therapist screen](https://psychobot-demo.fly.dev/therapist)
+   and sign in with the therapist account.
+2. Send an invitation to the client's Google-account E-mail address.
+3. Open the invitation E-mail in the browser profile using that client account.
+   Sign in with the account matching the invited E-mail address.
+4. Accept the invitation.
+5. Open the new workspace from each account. Create or select a shared topic.
+6. Exchange fictional messages in both directions. Check E-mail notifications,
+   unread indicators, and “Zobrazeno” timestamps.
+
+Create a private draft or source note and confirm that the other participant
+cannot see it. Create a summary and share it to demonstrate that its private
+sources remain private.
+
+For additional checks:
+
+- Open notification links while signed in.
+- While signed out, open a notification link and complete Google sign-in.
+- Reload both standalone message pages and workspace-context links.
+- Return to the sender's tab after the recipient reads a message.
+- Use an unrelated third account to confirm that workspace and message links
+  do not reveal their contents.
+
+Opening a workspace-context link while signed out preserves its destination
+through sign-in. Explicitly signing out from an open workspace returns to the
+role overview and clears that workspace selection.
+
+## Architecture
+
+The frontend uses React, TypeScript, Vite, Tailwind, and React Router.
+
+The existing hosted Supabase project provides PostgreSQL, access policies,
+Google authentication with PKCE, and Edge Functions. Brevo delivers invitation
+and notification E-mails.
+
+Fly.io runs a small nginx container serving the built frontend. There is
+currently no Python backend.
+
+## Local development
+
+Use Node.js 24 or newer.
 
 ```sh
 npm ci
 cp .env.example .env.local
-# Edit .env.local with your development project values
+```
+
+Set these public frontend values in `.env.local`:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Use the Supabase publishable key, never a server secret or service-role key.
+
+```sh
 npm run dev
 ```
 
-1. Open `http://localhost:5173/` in four separate browser profiles. Click **Přihlásit se přes Google** and sign in with a different Google test account in each — Anna, Jan, Petra, and one unrelated account. All four initially see **Zatím bez propojení**. Signing in also creates each account's profile automatically, named from their real Google name for now.
-2. Open **Authentication → Users** in Supabase. Identify Anna's, Jan's, and Petra's accounts by their email addresses and copy their **User UIDs**. Leave the unrelated account out of this step entirely — that is what keeps it unlinked for permission checks.
-3. Replace the three placeholders in [the demo fixture SQL](supabase/pair-test-accounts.sql) and run it in the Supabase SQL Editor. It overrides each of the three linked accounts' profile with its fictional demo name, and creates two workspaces: Anna is therapist to Jan, and Jan — the dual-role fixture — is therapist to Petra. Record the two returned workspace IDs. Running it again returns the same two IDs.
-4. Refresh all four app windows. Anna and Petra each see one connection; Jan sees two, one per role. Open **Otevřít pracovní prostor** on any connection to confirm each side sees its own role and the fictional name of its counterpart.
+Open [http://localhost:5000](http://localhost:5000).
 
-## 3. Verify access
+The currently configured local and deployed applications use the same hosted
+Supabase project and data. Invitation and notification E-mails use the hosted
+application URL, including when triggered from local development.
 
-| Session | Home page | Direct URL `/?workspace=<workspace-id>` |
-| --- | --- | --- |
-| Anna | **Terapeut**, linked to Jan Novák | That workspace opens and survives reload |
-| Jan | Both **Terapeut** (linked to Petra Dvořáková) and **Klient** (linked to Anna Jelínková) | Either of his two workspaces opens and survives reload |
-| Petra | **Klient**, linked to Jan Novák | That workspace opens and survives reload |
-| Unrelated Google account | **Zatím bez propojení** | **Pracovní prostor není dostupný**, for either workspace ID |
-| Signed out | Google sign-in screen | Google sign-in screen |
+Keep local environment files out of version control.
 
-Use the fourth browser profile for the unrelated account. Use **Odhlásit se** in one participant profile and reopen a direct URL to check signed-out access. Sign-in returns to the home page. Each participant opens a workspace from their own connection list; Jan's list has two entries.
+### Checks
 
 ```sh
-npm test       # Local Postgres access-policy checks using PGlite
-npm run build  # Type check and production bundle
+npm test
+npm run build
 ```
 
-The database policy authorizes reads by the signed-in Supabase user ID. Browser users have no write grant for pairings, and the workspace link does not grant access. The local tests run the migrations with simulated Supabase roles and user IDs. Use the browser checklist for the live Google and hosted Supabase flow.
+`npm test` runs the existing local database access-policy checks using PGlite.
+It does not replace browser testing of authentication, invitations, messaging,
+or E-mail delivery.
+
+`npm run build` checks TypeScript and creates `dist/`. The current build has a
+known nonblocking chunk-size warning.
+
+## Deployment
+
+Deployment uses the existing Fly.io app `psychobot-demo`.
+
+| File            | Purpose                                                                             |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `Dockerfile`    | Builds with Node 24 and `npm ci`, then copies `dist/` into nginx.                   |
+| `nginx.conf`    | Serves static files on port 8080 and provides SPA fallback.                         |
+| `.dockerignore` | Excludes local environment files, dependencies, and other unnecessary build inputs. |
+| `fly.toml`      | Defines the app, Frankfurt region, build arguments, HTTPS, and Machine settings.    |
+
+### Redeploy
+
+Install the Fly CLI, sign in with `fly auth login`, and ensure Docker is running.
+
+From the repository directory:
+
+```sh
+fly deploy --local-only --ha=false
+```
+
+This builds the current local checkout, uploads the image, and updates the
+existing application. GitHub pushes do not automatically deploy it.
+Restarting a Machine runs the existing image and does not publish code changes.
+
+Useful commands:
+
+```sh
+fly status -a psychobot-demo
+fly logs -a psychobot-demo
+```
+
+The deployment uses one shared CPU Machine with 256 MB RAM in Frankfurt.
+HTTPS is enforced. The Machine can stop while idle and starts on incoming
+requests, so the first visit after inactivity may take longer.
+
+This command deploys the frontend only. Supabase database migrations and Edge
+Functions are maintained and deployed separately.
+
+### Build-time configuration
+
+`fly.toml` supplies `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY` through `[build.args]`.
+
+These are public frontend configuration values. Vite embeds them in the built
+JavaScript, so changing them requires rebuilding and deploying the frontend.
+Runtime environment changes alone cannot update an existing bundle.
+
+Server secrets belong in their service settings. Never add Google client
+secrets, Brevo API keys, Supabase server keys, or authentication tokens to
+frontend configuration or this README.
+
+### SPA routing
+
+nginx serves built JavaScript and CSS under `/assets/`. Missing assets return 404.
+
+Other application paths fall back to `index.html`, allowing React Router to
+handle direct visits and reloads for routes such as:
+
+- `/client`
+- `/therapist`
+- `/invite?token=…`
+- `/message/<messageId>`
+- `/client?workspace=…&topic=…&message=…`
+- `/therapist?workspace=…&topic=…&message=…`
+
+## Hosted service configuration
+
+### Supabase authentication
+
+In the hosted project's Authentication URL Configuration:
+
+- Site URL: `https://psychobot-demo.fly.dev`
+- Allowed redirect URLs:
+  - `https://psychobot-demo.fly.dev/**`
+  - `http://localhost:5000/**`
+  - `http://localhost:8080/**`
+
+The application supplies a redirect destination using its current origin,
+allowing development, local Docker, and hosted sign-in to work independently.
+
+Google OAuth uses the Supabase callback URL shown in the Google provider
+settings as its authorized redirect URI. This is separate from the frontend
+URLs above.
+
+The configured identity scopes are `openid`, `userinfo.E-mail`, and
+`userinfo.profile`. External Google accounts outside the configured test-user
+list were successfully tested with this setup.
+
+### E-mail links and delivery
+
+Supabase Edge Functions use `APP_BASE_URL` for invitation and notification
+links. Its hosted value is:
+
+```text
+https://psychobot-demo.fly.dev
+```
+
+Manage this value under Supabase Edge Function secrets alongside the
+server-side E-mail configuration. Brevo credentials remain server-side.
+
+If notifications stop arriving, inspect Brevo's transactional logs. A message
+accepted by the E-mail API may still be blocked or fail delivery. A previous
+hard bounce caused a demo recipient to be blocklisted during testing.
+
+## Remaining limitations
+
+- Prototype for fictional demonstrations; not ready for real client data.
+- AI assistance is not implemented.
+- Workspaces currently have exactly two participants.
+- The interface is currently Czech only.
+- Updates are not realtime; some changes require returning to a tab or reloading.
+- In-app navigation protection for unsaved edits remains incomplete.
+- A single automatically stopping Machine provides no high-availability setup.
